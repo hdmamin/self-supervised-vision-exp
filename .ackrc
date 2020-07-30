@@ -1,0 +1,2 @@
+--ignore-dir=notebooks/.ipynb_checkpoints
+--ignore-dir=reports/.ipynb_checkpoints
