@@ -1,0 +1,20 @@
+7/30/20
+-------
+Progress: Brainstormed ideas for intial approaches to imagewang.
+
+Plans: Write detailed pre-mortem. Create github repo and push current files.
+
+7/31/20
+-------
+Progress: Wrote plans and pre-mortem. Created github repo and pushed files. Created new Comet.ml project. Played a few games at http://www.happy-neuron.com/ to generate ideas for visual reasoning and get other ideas for learning.
+
+Plans: Try loading a few sample images to get a feel for dir structure and get a sense of what's in our dataset, how big each split is, etc. Start following along with epoching blog (leaning towards starting with my mixup-inspired task).
+
+
+8/1/20
+-------
+Progress: 
+
+Plans: 
+
+

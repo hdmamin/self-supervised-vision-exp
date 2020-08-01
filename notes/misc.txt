@@ -1,0 +1,65 @@
+Ideas
+-----
+-for each example, get n (e.g. 4) images and slice them up into grids (e.g. 2x2). Then restructure the boxes into a single image and have the network output a vector of predictions for which box belongs to which image. Or as a more challenging variation, there must be a way to have it indicate the position of each box within its original image. Maybe we decide to use 2 images and decide that "image 1" is whichever image provides the box that ends up in the upper left corner of thet patchwork image. Or let me try working through an example:
+
+[a1][a2]   [b1][b2]          [a4][b2][b4][a3]
+[a3][a4]   [b3][b4]   --->   [a1][a2][b1][b3]   --->   [4, 6, 8, 3, 1, 2, 5, 7]   
+
+Here, we number the original positions from left to right and top to bottom 1 image at a time (e.g. counting would go [a1, a2, a3, a4, b1, b2, b3, b4]). Then the model predicts the position index for each item in the constructed image, once again going left to right and top to bottom (though now there is only 1 image. Perhaps as training goes on and the model learns, we can increase the number of images used to create each example. The general hope is that the model learns to distinguish between the two images and also learns the correct structure within each image. 
+
+Another variation: do the same thing but leave one box blank. We can then add an additional task to generate that box. This means the model must identify that there are two separate images, figure out enough about each of them to get the orientations right and see what each is missing, and then use some "imagination" to fill in the missing area. As a simpler variation, we could simply ask the model to identify which image was missing a patch rather than generate it (e.g. 1 means the image that provided the patch in the upper left corner, 0 means the other image). Again, this starts out as a simple task but if we eventually build up to, say, 8 images split up into 8x8 grids to construct a new 64x64 grid image with 1 piece missing, identifying the missing one may not be trivial (or if it is, surely there's a point where that stops being true: the images are only 160x160 (or 128x128, depending on which part of the github readme is correct) so to take things to an extreme, we surely couldn't predict which image was missing a 1x1 pixel box.
+
+While we're thinking of extremes, is there a way to use every image in every example and would that be beneficial? Is there something we could learn about the dataset as a whole this way that we don't get by looking at images 1 at a time? Perhaps each example can be a grid where each box comes from a different image. We then have to predict which position from the original image each box came from (e.g. lower left). They could either all be from the same position, in which case we can output a simple predicted class, or they could all be different in which case we need to predict a grid of classes.
+
+-simpler approach: apply 1 or more of n different transformations. Output vector of predicted classes (consider; could be single or multi-class) for which transformation was applied to each image. But would this learn more about the nature of transformations than the nature of the images?
+
+-Divide each image into 2x2 grid. Apply transformation independently to each segment (e.g. rotate the top left by 90 degrees, top right by 180 degrees, bottom left by 0 degrees, etc.). Then predict the amount each segment was rotated.
+
+-Divide n (e.g. 4) images into 2x2 grids, select 1 box from each. Rotate 3 of them by 1 set angle (e.g. 90 degrees) and the last 1 by a different angle (e.g. 180 degrees). Predict the image that was rotated a different amount than the others. Obviously for this to work they should all be a multiple of 90 (maybe there's a way to avoid that but for the time being that seems reasonable). Idea: predicting rotation already requires some knowledge about what is in the image, but this makes things a bit harder by only showing us part of the image. I'm also thinking that combining images this way might force the model learn something about the relationship between images.
+    -variant: instead of rotation being the defining factor, we choose a position in the 2x2 (e.g.) grid. So we might have three "top right" images and 1 "bottom right". 
+
+7/31 - Planning
+---------------
+Deadline: 9/30/20 for part 1 (image wang + fastai2 experiment). I suspect this will get done a lot faster and I can move on to experiment with additional methods or other datasets/libraries. However, in the interest of removing time pressure I'm setting aside a lot of time to play with this.
+
+Final Product: 1 or more of the following:
+    -Just a standard project with notebooks and py files as needed.
+
+    Optionally, this could include 1 or more of the following:
+    -Blog post on using fastai, SSL, etc. Probably will skip this though.
+    -App that visualizes something about the self-supervised model hidden states? Probably skip this too. I like making apps but I just spent a ton of time on streamlit in my last project and this is meant to be more about trying stuff out in torch/fastai.
+
+Concepts: 
+    -self-supervised learning
+    -optional: might be cool to try some generative models and see if they could help on this task somehow. VAE would be fun.
+Tech: 
+    -CometML - Set up experiment-monitoring environment. This was a "nice to have" last time but this time I'm considering it a requirement.
+    -FastAI - This is another point that moved from "nice to have" to "requirement". If I like this kind of project, I can try pytorch lightning or revert to incendio next time, but for the sake of clarity I want to make this very simple: part 1 at least must use fastai.
+Requirements:
+    -Implement >=1 custom self-supervised learning method on imagewang and evaluate how it transfers to a supervised task. Ideally, I'm envisioning a longer string of self-supervised experiments, but I'm not locking that in here because I think I might prefer to do that on text (and possibly with a different library). I'm keeping the scope very limited here: imagewang, fastai, an idea, and we'll see how it goes. For the record, the idea doesn't actually have to be new or innovative: it should be slightly more original than directly copying a paper/blog post, but it's fine if someone else has done something similar or even identical. I don't need to read a ton of papers to make sure this is some novel idea, I just want to be "drawing" rather than "coloring between the lines", so as long as I'm being forced to make my own decisions, it counts.
+
+    -Build at least 2 custom components in fastai2. That's pretty open-ended, but it would be nice to get a sense of the mid-level API.
+
+    -Experiment tracking (i.e. comet.ml). This should be an easy one to check off but I'm requiring it to make sure I don't let it slide.
+
+Pre-Mortem:
+    What could go wrong?
+
+    -turns out fastai's high level API is so perfected for this task that I don't really have to do anything custom.
+        [SOLUTION] I set a requirement for minimum number of custom components, so even if I CAN get away with this in theory, I've already ensured that I won't give myself credit for it.
+    -my pre-training task doesn't work at all. 
+        [SOLUTION] This would be disappointing but not overly surprising. I think it would still be acceptable. One smalll variation to the requirements can be that I have to get something that at least mildly works. Or at least ensure that the model is training without obvious bugs - I don't think I can be sure that the pre-training task will be useful since I'm not sure how hard that is to come up with.
+    -I end up just following along with a blog post and not trying anything original.
+        [SOLUTION] This wouldn't fulfill my requirements so I think we're okay. To be clear, I could start with that, but I'd still need to do something new afterwards. Anyway, I think I'll be okay: I found a nice blog post on SSL w/ fastai2 but it uses a different dataset and a different, simpler pre-training task than what I have in mind. It should provide a good guide without preventing me from trying new things.
+    -I find out that I don't like self-supervised learning or experimentation in general 
+        [SOLUTION] I guess if this happens it is what it is, but it seems pretty far-fetched given what I've liked and disliked so far.. It would be good to find this out now at least. But I can't really see this happening.
+    -I implement my first idea in a day or two, then sort of lose interest. I guess this would be acceptable as long as I wrap things up enough to meet my agreed on requirements. It would be kind of annoying to have to devote energy to picking another project so soon though.
+        [SOLUTION] This seems...pretty possible. My hope is that by choosing a pretty small dataset (I think), training will be fast enough that I'll be able to iterate quickly and once I get going, I'll be hooked enough to want to improve on my previous score.
+    -My GPU issues return and I get fed up and quit. 
+        [SOLUTION] I think I did enough setup on the last project that this is relatively unlikely. One slightly worrying issue is that the last time I tried to start my paperspace machine, the site was throwing weird errors and it never finished setting up. The other concern is that if I have to do a lot of work on GPUs, I can't just keep my work open at all times and it introduces a bigger barrier to starting each night. Maybe the dataset is small enough that CPU training is viable. That actually would be a good challenge: find a method that can be trained quickly on cpu. Realistically, actually achieving this now would be way too ambitious, but it's not a bad thing to keep in mind.
+
+-mixup inspired: Take 2 (or n) images and create a combination of them (e.g. 80% image 1, 20% image 2). Have the model predict what percent is image 1 (always the higher percentage). To do this, it seems like it basically needs to know what the 2 images are of, what they'd look like separately, and whether something looks closer to 1 image or another. (See notebook pg marked SSL 1).
+    -recall happy-neuron game: you have to quickly try to extract a few key features from the mashed up image, then look for them in the original images. When the items are recognizable (e.g. bicycle, airplane, etc.) this isn't too hard. When the objects are just scribbles, it's very hard because we can't quickly extract high level features as easily.
+
+-Select either 2 different images OR 1 image and apply a boatload of transformations to it. Then predict which case it is.
+    -variation: always select 1 image but randomly choose to split it either vertically or horizontally. Then apply a ton of transformations (e.g. splitting it up into a grid and rearranging the boxes). Then rotate them so the inputs are a consistent shape, and have the model predict if it was vertically or horizontally split.
