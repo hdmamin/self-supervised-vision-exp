@@ -13,6 +13,13 @@ Plans: Try loading a few sample images to get a feel for dir structure and get a
 
 8/1/20
 -------
+Progress: Fiddled around a bit with fastai's datablocks and lower level API but concluded pytorch is more intuitive, more fun, and should work fine. As long as I make everything work with the fastai training loop I think I'll consider that requirement met. Started working on torch dataset, mostly consisting of transform that mixes 2 images (functionality isn't very generalized yet).
+
+Plans: Fix tensor resize issue in dataset. Once I have things working in pure torch, maybe go back and take another stab at the fastai way.
+
+
+8/2/20
+-------
 Progress: 
 
 Plans: 
