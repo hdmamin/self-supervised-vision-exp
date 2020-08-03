@@ -20,8 +20,13 @@ Plans: Fix tensor resize issue in dataset. Once I have things working in pure to
 
 8/2/20
 -------
+Progress: Added image resize using native Pillow method. Batching wasn't collating right so struggled a bit with custom collate_fn's, but ultimately changed dataset getitem to make this easier. Started checking how to re-separate batch into the desired parts for the model (i.e. need x_constructed, x_a, x_b, x_c, where each x is shape (bs, channels, h, w).
+
+Plans: Start working on model. Mostly just make sure batching is set up in a usable way that will allow me to encode each image separately.
+
+8/3/20
+-------
 Progress: 
 
 Plans: 
-
 
