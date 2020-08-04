@@ -1,0 +1,12 @@
+MANIFEST.in
+README.md
+requirements.txt
+setup.py
+img_wang/__init__.py
+img_wang/data.py
+img_wang/utils.py
+img_wang.egg-info/PKG-INFO
+img_wang.egg-info/SOURCES.txt
+img_wang.egg-info/dependency_links.txt
+img_wang.egg-info/requires.txt
+img_wang.egg-info/top_level.txt

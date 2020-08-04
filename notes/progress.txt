@@ -26,6 +26,12 @@ Plans: Start working on model. Mostly just make sure batching is set up in a usa
 
 8/3/20
 -------
+Progress: Cleaned up MixupTransform and made it a little more generalizable. Ported data functions/classes to lib and wrote docs. Started very early work on model. Fixed issue loading 1 channel images.
+
+Plans: Take another look at fastai blog post. Consider best way to deal with encoding multiple images (maybe simplest to keep source images horizontally stacked as single tensor?). Work on building encoder.
+
+8/4/20
+-------
 Progress: 
 
 Plans: 
