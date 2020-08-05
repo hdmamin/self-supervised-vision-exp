@@ -32,6 +32,12 @@ Plans: Take another look at fastai blog post. Consider best way to deal with enc
 
 8/4/20
 -------
+Progress: Figured out weird dataset/dataloader batching issue and changed it to return each image separately instead of concatenating into 1 giant image (cause: getitem should return like (x1, x2, x3, x4, y), not ((x1, x2, x3, x4), y)). Built out first stab at model arch using a stack of conv blocks.
+
+Plans: Update incendio resblock interface to be consistent with convblock (seems like I'm leaning towards using that over fastai. I guess that wouldn't be so bad - using fastai does risk me glossing over some details, and if this leads to more comfort with torch and a more developed incendio library, that would be good too). Generalize UnmixerModel to accept resblock. Also consider: did I make a mistake by restructuring the batch this way instead of applying an encoder n+1 times? This is just the pre-training task, eventually I'll want to input only 1 image at a time. Maybe it's okay, just need to give this some thought.
+
+8/5/20
+-------
 Progress: 
 
 Plans: 

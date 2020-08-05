@@ -91,8 +91,8 @@ class ImageMixer:
             input images.
         """
         images = torch.stack(images, dim=0)
-        # 3 new dimensions correspond to (c, h, w), NOT self.n
-        return (weights[:, None, None, None] * images).sum(0)
+        # 3 new dimensions correspond to (c, h, w), NOT self.n.
+        return (weights[:, None, None, None] * images).sum(0).float()
 
 
 class MixupDS(Dataset):
@@ -104,7 +104,7 @@ class MixupDS(Dataset):
     the linear combination.
     """
 
-    def __init__(self, dir_=None, paths=(), shape=(160, 160), n=3, **kwargs):
+    def __init__(self, dir_=None, paths=(), shape=(128, 128), n=3, **kwargs):
         if not dir_ and not paths:
             raise ValueError('One of dir_ or paths should be non-null.')
 
@@ -126,16 +126,17 @@ class MixupDS(Dataset):
 
         Returns
         -------
-        tuple[torch.tensor]: First item is x, i.e. n+1 images stacked together
-        horizontally to produce shape (n_channels, height, width*4). The first
-        image is the newly constructed one. Second item is y, the weights used
-        to generate the new image. For example, in the default case we'd have
-        a tensor of shape (3,), where the first number corresponds to the first
-        original image (the second image in the returned x).
+        tuple[torch.tensor]: First item is the newly-constructed image. The
+        next n items (as in self.n) are the source images, 2 or which were used
+        to construct the new image. The last item is a rank 1 tensor containing
+        the weights used to generate the new image. For example, in the default
+        case we'd have a tensor of shape (3,), where the first number
+        corresponds to the first original image (the second item in the batch
+        overall.
         """
         images = map(self.load_img, self.paths[i:i + self.n])
         xb, yb = self.mixer.transform(*images)
-        return torch.cat(xb, dim=-1).float(), yb
+        return (*xb, yb)
 
     def shuffle(self):
         """Note: even when using shuffle=True in dataloader, the current
