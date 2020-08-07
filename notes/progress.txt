@@ -40,11 +40,18 @@ Plans: Update incendio resblock interface to be consistent with convblock (seems
 -------
 Progress: Gave some thought to the issue of processing all images at once and concluded that it's probably fine - when transferring, I can just pull out self.conv and self.pool and add a new head in forward(). Updated incendio resblock and convblock interfaces to be more similar. Updated UnmixerModel interface to allow the addition of 1 or more resblocks after the initial conv blocks (realized it might be unwise to use res blocks from the start since we can't increase the channel dimension) and generally did a pretty significant model overhaul. Wrote wrapper to get train/val datasets and dataloaders. Wrote dataset shuffling callback. Fixed a few incendio bugs and started training on a tiny dataset for debugging purposes.
 
-Plans: Investigate empty history plog bug from MetricHistory callback. Investigate if model is learning anything (early results look pretty random) and if not, try to determine the cause (e.g. is LR just too high or is something fundamentally wrong with the model, e.g. mixing data across batches or something).
+Plans: Investigate empty history plot bug from MetricHistory callback. Investigate if model is learning anything (early results look pretty random) and if not, try to determine the cause (e.g. is LR just too high or is something fundamentally wrong with the model, e.g. mixing data across batches or something).
 
 8/6/20
+-------
+Progress: Found cause of history plot bug and fixed it (at least I think - haven't thoroughly tested cases where there are more metrics). Continued trying to overfit on tiny batch with smaller LR and more epochs and still failed. Think there must be a problem with the model, probably mixing up images or examples somewhere along the way. Started working on a model variation that foregoes complicated batching and just puts each image through the encoding layers separately.
+
+Plans: Finish up simple encoder and see if that also fails to learn on a tiny batch.
+
+8/7/20
 -------
 Progress: 
 
 Plans: 
+
 
