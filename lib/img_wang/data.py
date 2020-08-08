@@ -117,8 +117,7 @@ class MixupDS(Dataset):
         self.load_img = partial(load_img, shape=shape)
 
     def __len__(self):
-        """If number of files isn't divisible by n, some may be left out."""
-        return len(self.paths) // self.n
+        return len(self.paths) - self.n + 1
 
     def __getitem__(self, i):
         """
