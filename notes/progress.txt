@@ -53,11 +53,20 @@ Plans: Finish up simple encoder and see if that also fails to learn on a tiny ba
 Progress: Finished simpler encoder. Found and fixed bug in dataset that was giving it the wrong length. Found and fixed bug in model forward where I was squeezing the batch dimension if it was 1. The model continues to fail to learn on even a tiny subset.
 
 Plans: Try swapping in a large pre-trained model to see if that can learn. This doesn't count for the self-supervised task but it's a way to see if my model is the problem. If this still doesn't learn, maybe it's something with the dataset or dataloader or loss function. Or could the task just be too hard when training a model from scratch? That seems unlikely, unless maybe we just need a bigger model? 
+
 8/8/20
+------
+Progress: Tested pre-trained mobilenet encoder on tiny subset and that also failed to learn. Built model wrapper that allows us to pass in an encoder network (e.g. mobilenet) and applies the additional pooling, dot products, softmax, etc. at the end. This should make it easier to swap different architectures in and out. Wrote 2 new datasets to allow more testing to determine where the bug is.
+
+Plans: Test model on ScaleDataset and see if that is able to learn. If not, maybe there's a problem with my dot product to softmax steps. Clean up nb2 a bit.
+
+8/9/20
 ------
 Progress:
 
 Plans:
+
+
 
 
 

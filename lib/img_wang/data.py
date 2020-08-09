@@ -98,7 +98,7 @@ class ImageMixer:
         return (weights[:, None, None, None] * images).sum(0).float()
 
 
-class MixupDS(Dataset):
+class MixupDataset(Dataset):
     """Dataset for unsupervised learning. We create a new image that is a
     linear combination of two other images. The network is shown the
     constructed image, the two sources images, and 1 or more other images that
@@ -150,6 +150,79 @@ class MixupDS(Dataset):
         np.random.shuffle(self.paths)
 
 
+class ScaleDataset(Dataset):
+    """Dataset that matches the basic output format of MixupDataset (outputs
+    n+1 images as x and a vector of n values that sum to 1, where y[i]
+    corresponds to x[i+1]. The idea is to provide a simpler version of the task
+    to help identify whether a bug is caused by a model or something about the
+    Mixup task.
+    """
+
+    def __init__(self, dir_=None, paths=None, shape=(128, 128), n=3,
+                 dist=None, a=5, b=8):
+        assert shape[0] == shape[1] and shape[0] % 2 == 0, 'Invalid shape.'
+
+        self.paths = paths or get_image_files(dir_)
+        self.shape = shape
+        self.n = n
+        self.dist = dist or torch.distributions.beta.Beta(a, b)
+
+    def __len__(self):
+        return len(self.paths)
+
+    def __getitem__(self, i):
+        img = load_img(self.paths[i], shape=self.shape)
+        weights = self._generate_weights()
+        new_imgs = [img * w for w in weights]
+        return (img, *new_imgs, weights)
+
+    def _generate_weights(self):
+        weights = np.zeros(self.n)
+        p = self.dist.sample()
+        indices = np.random.choice(self.n, size=2, replace=False)
+        weights[indices] = p, 1 - p
+        return torch.tensor(weights)
+
+
+class QuadrantDataset(Dataset):
+    """Another very simple dataset that randomly chooses 1 quadrant of an image
+    to return. THe label is an integer specifying which quadrant (between 0
+    and 3 inclusive starting with the upper left and moving clockwise.
+
+    Later realized it would be more helpful to have a dataset with the same
+    basic output format as MixupDataset to allow us to test the same models.
+    """
+
+    def __init__(self, dir_=None, paths=None, shape=(128, 128)):
+        assert shape[0] == shape[1] and shape[0] % 2 == 0, 'Invalid shape.'
+
+        self.paths = paths or get_image_files(dir_)
+        self.shape = shape
+        self.mid_idx = self.shape[0] // 2
+
+    def __len__(self):
+        return len(self.paths)
+
+    def __getitem__(self, i):
+        img = load_img(self.paths[i], self.shape)
+        i = np.random.randint(0, 4)
+        return self.select_quadrant(img, i), i
+
+    def select_quadrant(self, img, i):
+        """
+        [0, 1]
+        [2, 3]
+        """
+        if i == 0:
+            return img[:, :self.mid_idx, :self.mid_idx]
+        elif i == 1:
+            return img[:, :self.mid_idx, self.mid_idx:]
+        if i == 2:
+            return img[:, self.mid_idx:, :self.mid_idx]
+        if i == 3:
+            return img[:, self.mid_idx:, self.mid_idx:]
+
+
 def get_mixup_databunch(dir_=None, paths=None, bs=32, valid_bs_mult=1,
                         train_pct=.9, random_state=0, **kwargs):
     """Wrapper to quickly get train and validation datasets and dataloaders
@@ -185,7 +258,8 @@ def get_mixup_databunch(dir_=None, paths=None, bs=32, valid_bs_mult=1,
     paths = paths or get_image_files(dir_)
     train, val = train_test_split(paths, train_size=train_pct,
                                   random_state=random_state)
-    dst, dsv = MixupDS(paths=train, **kwargs), MixupDS(paths=val, **kwargs)
+    dst = MixupDataset(paths=train, **kwargs)
+    dsv = MixupDataset(paths=val, **kwargs)
     dlt, dlv = DataLoader(dst, bs), DataLoader(dsv, int(bs * valid_bs_mult))
     return Args(ds_train=dst, ds_val=dsv, dl_train=dlt, dl_val=dlv)
 
