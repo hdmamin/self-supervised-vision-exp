@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 import torch
 from torch.utils.data import Dataset, DataLoader
 
-from htools import Args
+from htools import Args, valuecheck
 
 
 class ImageMixer:
@@ -42,6 +42,8 @@ class ImageMixer:
             random value between 0 and 1. By default, we use a Beta
             distribution. If one is passed in, a and b are ignored.
         """
+        assert n >= 2, 'n must be >=2 so we can combine images.'
+
         self.dist = dist or torch.distributions.beta.Beta(a, b)
         self.n = n
 
@@ -181,7 +183,7 @@ class ScaleDataset(Dataset):
         p = self.dist.sample()
         indices = np.random.choice(self.n, size=2, replace=False)
         weights[indices] = p, 1 - p
-        return torch.tensor(weights)
+        return torch.tensor(weights, dtype=torch.float)
 
 
 class QuadrantDataset(Dataset):
@@ -223,8 +225,11 @@ class QuadrantDataset(Dataset):
             return img[:, self.mid_idx:, self.mid_idx:]
 
 
-def get_mixup_databunch(dir_=None, paths=None, bs=32, valid_bs_mult=1,
-                        train_pct=.9, random_state=0, **kwargs):
+@valuecheck
+def get_databunch(dir_=None, paths=None,
+                  mode:('mixup', 'scale', 'quadrant')='mixup', bs=32,
+                  valid_bs_mult=1, train_pct=.9, shuffle_train=True,
+                  drop_last=True, random_state=0, **kwargs):
     """Wrapper to quickly get train and validation datasets and dataloaders
     from a directory of unlabeled images. This isn't actually a fastai
     databunch, but in practice what it achieves is sort of similar and I
@@ -258,9 +263,10 @@ def get_mixup_databunch(dir_=None, paths=None, bs=32, valid_bs_mult=1,
     paths = paths or get_image_files(dir_)
     train, val = train_test_split(paths, train_size=train_pct,
                                   random_state=random_state)
-    dst = MixupDataset(paths=train, **kwargs)
-    dsv = MixupDataset(paths=val, **kwargs)
-    dlt, dlv = DataLoader(dst, bs), DataLoader(dsv, int(bs * valid_bs_mult))
+    DS = eval(mode.title() + 'Dataset')
+    dst, dsv = DS(paths=train, **kwargs), DS(paths=val, **kwargs)
+    dlt = DataLoader(dst, bs, drop_last=drop_last, shuffle=shuffle_train)
+    dlv = DataLoader(dsv, int(bs * valid_bs_mult), drop_last=drop_last)
     return Args(ds_train=dst, ds_val=dsv, dl_train=dlt, dl_val=dlv)
 
 

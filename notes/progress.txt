@@ -62,11 +62,15 @@ Plans: Test model on ScaleDataset and see if that is able to learn. If not, mayb
 
 8/9/20
 ------
-Progress:
+Progress: Updated get_databunch() function to allow us to choose which dataset type to create and added extra defaults to shuffle train set and drop incomplete batches. Found bug where Unmixer referenced global var and removed it. Added sigmoid option as final activation since softmax seems somewhat problematic here. Trained a bit on scale dataset and model shows some ability to learn, though the sigmoid model still outputs ~1 for the nonzero images. Still not really learning on mixup task. I think my dot product layer needs to be fleshed out into a more powerful classification head.
+
+Plans: Refactor Unmixer to accept both the encoder and decoder as separate modules and build current functionality into a new decoder class. Maybe try a couple other decoder options (probably just start with some additional linear layers of some sort - have to think about exact strategy and implementation).
+
+8/10/20
+------
+Progress: 
 
 Plans:
-
-
 
 
 
