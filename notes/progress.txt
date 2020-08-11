@@ -68,10 +68,13 @@ Plans: Refactor Unmixer to accept both the encoder and decoder as separate modul
 
 8/10/20
 ------
+Progress: Heavy refactoring: Unmixer now accepts an encoder and a classification head. Built abstract classification head class, refactored dotproducthead into its own class, and added MLPhead class. Updated SmoothSoftmax class from attentive pooling experiments. Tried it out briefly and I THINK everything looks okay but need to check more. Trained on subst with MLP head and sigmoid activation and net now predicts all zeros :( .
+
+Plans: Clean up notebook - it's gotten out of hand. Think it may be nearing the time to port some functionality to lib and start a fresh nb. Maybe first experiment a tiny bit more to see if a softmax last_act works better.
+
+8/11/20
+------
 Progress: 
 
-Plans:
-
-
-
+Plans: 
 
