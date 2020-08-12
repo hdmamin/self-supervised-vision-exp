@@ -68,11 +68,18 @@ Plans: Refactor Unmixer to accept both the encoder and decoder as separate modul
 
 8/10/20
 ------
-Progress: Heavy refactoring: Unmixer now accepts an encoder and a classification head. Built abstract classification head class, refactored dotproducthead into its own class, and added MLPhead class. Updated SmoothSoftmax class from attentive pooling experiments. Tried it out briefly and I THINK everything looks okay but need to check more. Trained on subst with MLP head and sigmoid activation and net now predicts all zeros :( .
+Progress: Heavy refactoring: Unmixer now accepts an encoder and a classification head. Built abstract classification head class, refactored dotproducthead into its own class, and added MLPhead class. Updated SmoothSoftmax class from attentive pooling experiments. Tried it out briefly and I THINK everything looks okay but need to check more. Trained on subset with MLP head and sigmoid activation and net now predicts all zeros :( .
 
 Plans: Clean up notebook - it's gotten out of hand. Think it may be nearing the time to port some functionality to lib and start a fresh nb. Maybe first experiment a tiny bit more to see if a softmax last_act works better.
 
 8/11/20
+------
+Progress: Tried a couple variations of refactored models on ScaleDataset and now the model completely fails to learn (guess I should have kept that example that was working). Ported all the models to lib and wrote some documentation, though skipped the more parameter-heavy constructors: it's possible we'll need to refactor more so I'm holding off on that. Part of the goal here was just to put everything in pycharm to see if it found any dumb global variable mistakes (it did not).
+
+Plans: Start new clean notebook. Go through notes and try to reproduce the 1 or 2 examples that sort of worked. If necessary, create an even simpler version of ScaleDataset and see if I can get that to work (e.g. n=1 so we just have the original image and 1 scaled version? Have to see if this is compatible with current implementation).
+
+
+8/12/20
 ------
 Progress: 
 
