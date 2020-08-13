@@ -81,7 +81,15 @@ Plans: Start new clean notebook. Go through notes and try to reproduce the 1 or 
 
 8/12/20
 ------
-Progress: 
+Progress: Found and fixed bug in DotProductHead where last_act was applied (it's applied again by parent class). Changed Unmixer to inherit from BaseModel. Updated ScaleDataset to allow for n as low as 1. Ran some more experiments and still failed to learn anything - in fact, it's not clear if model weights are even changing. Predictions seem to remain pretty constant, which I initially thought might be caused by one of the models referencing some global variable. Now I'm wondering if I messed up the incendio training loop or optimizer with one of my recent changes. Explored different loss functions a bit and realized these probably aren't really itended for vector regression (may not be handling batches right).
 
-Plans: 
+Plans: Investigate whether weights are changing (aggregate stats seem unchanged but maybe specific weights change). Maybe best way forward is to just bite the bullet and write a pure torch loop to see if incendio is the problem. Or maybe I can try Lightning without rewriting anything. I've already scaled data/task complexity way down so next is to rule out incendio bugs.
+
+8/13/20
+-------
+Progress:
+
+Plans:
+
+
 

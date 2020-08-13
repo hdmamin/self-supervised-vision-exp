@@ -7,6 +7,7 @@ from torchvision import models as tvm
 import warnings
 
 from htools import valuecheck
+from incendio.core import BaseModel
 from incendio.layers import Mish, ConvBlock, ResBlock
 
 
@@ -138,7 +139,7 @@ class MLPHead(ClassificationHead):
         return x.squeeze(-1)
 
 
-class Unmixer(nn.Module):
+class Unmixer(BaseModel):
     """Model wrapper that contains an encoder, pooling layer, and
     classification head. This is intended for use on the unsupervised task.
     """

@@ -163,7 +163,6 @@ class ScaleDataset(Dataset):
     def __init__(self, dir_=None, paths=None, shape=(128, 128), n=3,
                  dist=None, a=5, b=8):
         assert shape[0] == shape[1] and shape[0] % 2 == 0, 'Invalid shape.'
-        assert n >= 2, 'n must be >= 2.'
 
         self.paths = paths or get_image_files(dir_)
         self.shape = shape
@@ -182,8 +181,11 @@ class ScaleDataset(Dataset):
     def _generate_weights(self):
         weights = np.zeros(self.n)
         p = self.dist.sample()
-        indices = np.random.choice(self.n, size=2, replace=False)
-        weights[indices] = p, 1 - p
+        if self.n > 1:
+            indices = np.random.choice(self.n, size=2, replace=False)
+            weights[indices] = p, 1 - p
+        else:
+            weights[0] = p
         return torch.tensor(weights, dtype=torch.float)
 
 
