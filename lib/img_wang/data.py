@@ -163,6 +163,7 @@ class ScaleDataset(Dataset):
     def __init__(self, dir_=None, paths=None, shape=(128, 128), n=3,
                  dist=None, a=5, b=8):
         assert shape[0] == shape[1] and shape[0] % 2 == 0, 'Invalid shape.'
+        assert n >= 2, 'n must be >= 2.'
 
         self.paths = paths or get_image_files(dir_)
         self.shape = shape
@@ -229,7 +230,7 @@ class QuadrantDataset(Dataset):
 def get_databunch(dir_=None, paths=None,
                   mode:('mixup', 'scale', 'quadrant')='mixup', bs=32,
                   valid_bs_mult=1, train_pct=.9, shuffle_train=True,
-                  drop_last=True, random_state=0, **kwargs):
+                  drop_last=True, random_state=0, **ds_kwargs):
     """Wrapper to quickly get train and validation datasets and dataloaders
     from a directory of unlabeled images. This isn't actually a fastai
     databunch, but in practice what it achieves is sort of similar and I
@@ -250,7 +251,7 @@ def get_databunch(dir_=None, paths=None,
         Percent of files to place in training set.
     random_state: int
         This affects how the data is split.
-    **kwargs: any
+    **ds_kwargs: any
         Additional kwargs to pass to the dataset constructor. This includes
         shape (tuple of image height and width), n (number of source images),
         and any parameters accepted by ImageMixer constructor.
@@ -264,7 +265,7 @@ def get_databunch(dir_=None, paths=None,
     train, val = train_test_split(paths, train_size=train_pct,
                                   random_state=random_state)
     DS = eval(mode.title() + 'Dataset')
-    dst, dsv = DS(paths=train, **kwargs), DS(paths=val, **kwargs)
+    dst, dsv = DS(paths=train, **ds_kwargs), DS(paths=val, **ds_kwargs)
     dlt = DataLoader(dst, bs, drop_last=drop_last, shuffle=shuffle_train)
     dlv = DataLoader(dsv, int(bs * valid_bs_mult), drop_last=drop_last)
     return Args(ds_train=dst, ds_val=dsv, dl_train=dlt, dl_val=dlv)

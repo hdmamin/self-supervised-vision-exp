@@ -114,8 +114,7 @@ class DotProductHead(ClassificationHead):
         super().__init__(**act_kwargs)
 
     def _forward(self, x_new, x_stack):
-        x = (x_new[:, None, ...] * x_stack).sum(-1)
-        return self.last_act(x)
+        return (x_new[:, None, ...] * x_stack).sum(-1)
 
 
 class MLPHead(ClassificationHead):
