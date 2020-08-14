@@ -4,4 +4,6 @@ __pycache__/
 .idea/
 data/
 **egg-info/
+mlruns/
+lightning_logs/
 

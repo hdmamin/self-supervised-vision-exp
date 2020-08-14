@@ -87,9 +87,17 @@ Plans: Investigate whether weights are changing (aggregate stats seem unchanged 
 
 8/13/20
 -------
+Progress: Ported functionality to pytorch lightning module and datamodule. Tried creating cometml logger but was getting errors so tried out mlflow logger (still some kinks to work out). Finding it surprisingly hard to find metric histories, especially train metrics - maybe need to explicitly add that to the logger in forward_step(). Early results don't look encouraing though (based on glimpses of loss in tqdm progress bar). This suggests the bug is not with the training loop.
+
+Plans: Continue testing with lightning, adding ways to see training metrics. Try replacing variable LR optimizer with default torch optim to rule out that as a cause. Try replacing model with something SUPER simple. Starting to wonder if it's the loss function, but it may be a good idea to rule out a couple other causes first. Try to get lightning + mlflow + comet to save everything where I want it rather than cluttering up root directory.
+
+8/14/20
+-------
 Progress:
 
 Plans:
+
+
 
 
 
