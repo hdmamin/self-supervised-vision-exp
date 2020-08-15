@@ -93,9 +93,17 @@ Plans: Continue testing with lightning, adding ways to see training metrics. Try
 
 8/14/20
 -------
+Progress: Built new dataModule and model for supervised task. Swapped out repeated squeeze calls in unsupervised model for a PoolFlatten layer. Tested supervised data/model on a subset and I think there's STILL an error (though hard to confirm since lightning seems intent on hiding all metrics).
+
+Plans: Figure out where lightning stores training metrics. Try to identify possible bug in supervised task code (hoping to succeed in overfitting on 1 batch).
+
+8/15/20
+-------
 Progress:
 
 Plans:
+
+
 
 
 

@@ -273,7 +273,7 @@ def get_databunch(dir_=None, paths=None,
     return Args(ds_train=dst, ds_val=dsv, dl_train=dlt, dl_val=dlv)
 
 
-def load_img(path, shape=(160, 160)):
+def load_img(path, shape=(128, 128), norm=True):
     """Load image, normalize pixel values to lie between 0 and 1, resize to the
     desired shape, and permute the axes so that n_channels comes first.
 
@@ -283,13 +283,16 @@ def load_img(path, shape=(160, 160)):
         Location of file to load.
     shape: tuple[int]
         Shape to resize image to.
+    norm: bool
+        If true, normalize values to lie between 0 and 1 by dividing by 255.
 
     Returns
     -------
     TensorImage: shape (channels, height, width)
     """
     img = load_image(path).resize(shape)
-    tns = TensorImage(img) / 255.
+    tns = TensorImage(img)
+    if norm: tns = torch.true_divide(tns, 255.)
     if tns.dim() == 2: tns = tns.unsqueeze(-1).expand(*shape, 3)
     return tns.permute(2, 0, 1)
 

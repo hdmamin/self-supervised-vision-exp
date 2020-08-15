@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from fastai2.layers import AdaptiveConcatPool2d
+from fastai2.layers import PoolFlatten
 import numpy as np
 import torch
 import torch.nn as nn
@@ -158,7 +158,7 @@ class Unmixer(BaseModel):
         """
         super().__init__()
         self.encoder = encoder or Encoder()
-        self.pool = AdaptiveConcatPool2d(1)
+        self.pool = PoolFlatten('cat')
         self.head = head or DotProductHead()
 
     def forward(self, *xb):
@@ -167,8 +167,7 @@ class Unmixer(BaseModel):
         all n+1 images at once. Still need to confirm whether that
         implementation works correctly, though.
         """
-        x_new, *x = [self.pool(self.encoder(x)).squeeze(-1).squeeze(-1)
-                     for x in xb]
+        x_new, *x = [self.pool(self.encoder(x)) for x in xb]
         x = torch.stack(x, dim=1)
         return self.head(x_new, x)
 
