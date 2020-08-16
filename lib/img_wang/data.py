@@ -1,3 +1,4 @@
+from copy import copy
 from fastai2.torch_core import TensorImage
 from fastai2.data.transforms import get_image_files
 from fastai2.vision.core import load_image
@@ -295,4 +296,31 @@ def load_img(path, shape=(128, 128), norm=True):
     if norm: tns = torch.true_divide(tns, 255.)
     if tns.dim() == 2: tns = tns.unsqueeze(-1).expand(*shape, 3)
     return tns.permute(2, 0, 1)
+
+
+def ds_subset(ds, n, random=False, attr='samples'):
+    """Subset a torch dataset.
+
+    Parameters
+    ----------
+    ds: torch.utils.data.Dataset
+    n: int
+        The number of samples to place in the new subset.
+    random: bool
+        If True, randomly select the items to place in the subset. Otherwise
+        they will simply be sliced from the beginning.
+    attr: str
+        Name of attribute containing items in dattaset. In built-in torch
+        datasets, this is 'samples' (at least in ImageFolder). In my custom
+        datasets this is often 'paths'.
+
+    Returns
+    -------
+    torch.utils.data.Dataset: A new dataset with n items.
+    """
+    ds = copy(ds)
+    samples = getattr(ds, attr)
+    setattr(ds, attr, [samples[i] for i in np.random.randint(0, len(ds), n)] \
+            if random else samples[:n])
+    return ds
 

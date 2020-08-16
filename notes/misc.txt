@@ -73,3 +73,9 @@ Pre-Mortem:
 8/12/20
 -------
 -suspicious sign: unmixer layer stats remain unchanged after 10 epochs with an enormous LR (e.g. 1000). This is with default encoder and decoder and L1 loss. I think maybe some or all of the losses I've been using are really geared for regression predicting one value, not vector regression.
+
+8/13/20
+-------
+If loss investigation doesn't fix things, may want to try writing callback to check if model weights are actually changing. Or could continue digging into lightning and try to get tensorboard working to visualize weights and/or gradients.
+
+

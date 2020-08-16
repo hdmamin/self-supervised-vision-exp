@@ -99,13 +99,14 @@ Plans: Figure out where lightning stores training metrics. Try to identify possi
 
 8/15/20
 -------
-Progress:
+Progress: Realized I was using wrong loss for supervised task and swapped in F.cross_entropy. Wrote function to create a subset of a built-in Torch dataset (haven't tested it yet on my custom datasets but I think it's flexible enough that it should be usable with them). Succeeded in overfitting on a tiny subset of the supervised task using Incendio (1 class only), then confirmed training also seems to be working on a slightly larger subset representing most classes (40 row train set). Ported ds_subset function to lib and wrote docstring.
 
-Plans:
-
-
+Plans: Now that incendio loop/optimizer seems unlikely to have caused the failure to learn on the unsupervised task, investigate loss function. See if there's something built-in I should be using (maybe pairwise_distance will work?) or write wrapper to L2/L1 loss that handles reductions appropriately. Maybe port some of the recent lightning functionality to lib.
 
 
+8/16/20
+-------
+Progress: 
 
-
+Plans: 
 
