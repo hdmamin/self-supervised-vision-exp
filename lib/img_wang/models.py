@@ -6,7 +6,7 @@ import torch.nn as nn
 from torchvision import models as tvm
 import warnings
 
-from htools import valuecheck
+from htools import valuecheck, identity
 from incendio.core import BaseModel
 from incendio.layers import Mish, ConvBlock, ResBlock
 
@@ -86,14 +86,18 @@ class ClassificationHead(nn.Module, ABC):
     """
 
     @valuecheck
-    def __init__(self, last_act: ('sigmoid', 'softmax') = 'sigmoid',
+    def __init__(self, last_act: ('sigmoid', 'softmax', None) = 'sigmoid',
                  temperature=1.0):
         super().__init__()
-        if last_act == 'sigmoid':
-            warnings.warn('Temperature is ignored when using sigmoid.')
-            self.last_act = torch.sigmoid
-        else:
+        if last_act == 'softmax':
             self.last_act = SmoothSoftmax(temperature)
+        else:
+            warnings.warn('Temperature is ignored when last activation is '
+                          'not softmax.')
+            if last_act == 'sigmoid':
+                self.last_act = torch.sigmoid
+            if last_act is None:
+                self.last_act = identity
 
     def forward(self, x_new, x_stack):
         x = self._forward(x_new, x_stack)

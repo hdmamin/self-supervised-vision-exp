@@ -106,6 +106,12 @@ Plans: Now that incendio loop/optimizer seems unlikely to have caused the failur
 
 8/16/20
 -------
+Progress: Added multi-label classification mode to mixup and scale datasets (simpler task: predict which images are sources, not what their weights were). This lets us train in a way that I'm confident is not mis-using a loss function (binary_cross_entropy_with_logits with OHE targets). Confirmed ability to overfit 1 batch using identity last_act, 3 layer encoder, MLP head. Had to restart nb due to autoreload failure and training is now oddly much slower. Maybe I was using dot product head before, but encoder was much bigger. Tried classification mode with MixupDS and model predicted ~.67 for everything.
+
+Plans: Think about what this problem means and research fixes. Or port lightning functionality and write some documentation if I want something less mentally taxing.
+
+8/17/20
+-------
 Progress: 
 
 Plans: 

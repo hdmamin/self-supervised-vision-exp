@@ -63,7 +63,7 @@ class ImageMixer:
         combination. These will serve as labels in our self-supervised task.
         """
         w = self._generate_weights()
-        return (self._combine_images(images, w), *images), w.float()
+        return (self._combine_images(images, w), *images), w
 
     def _generate_weights(self):
         """
@@ -78,7 +78,7 @@ class ImageMixer:
         p = self.dist.sample()
         indices = np.random.choice(self.n, size=2, replace=False)
         weights[indices] = p, 1 - p
-        return torch.tensor(weights)
+        return torch.tensor(weights, dtype=torch.float)
 
     def _combine_images(self, images, weights):
         """Create linear combination of multiple images.
@@ -110,7 +110,23 @@ class MixupDataset(Dataset):
     the linear combination.
     """
 
-    def __init__(self, dir_=None, paths=(), shape=(128, 128), n=3, **kwargs):
+    def __init__(self, dir_=None, paths=(), shape=(128, 128), n=3,
+                 regression=True, **kwargs):
+        """Classification mode should be used with
+        F.binary_cross_entropy_with_logits loss.
+        Regression mode should probably be F.mse_loss or F.l1_loss but may
+        need to mess around with the reduction dimension a bit to get
+        everything working as intended.
+
+        Parameters
+        ----------
+        dir_
+        paths
+        shape
+        n
+        regression
+        kwargs
+        """
         if not dir_ and not paths:
             raise ValueError('One of dir_ or paths should be non-null.')
 
@@ -118,6 +134,7 @@ class MixupDataset(Dataset):
         self.n = n
         self.mixer = ImageMixer(n=3, **kwargs)
         self.load_img = partial(load_img, shape=shape)
+        self.regression = regression
 
     def __len__(self):
         return len(self.paths) - self.n + 1
@@ -133,15 +150,20 @@ class MixupDataset(Dataset):
         -------
         tuple[torch.tensor]: First item is the newly-constructed image. The
         next n items (as in self.n) are the source images, 2 or which were used
-        to construct the new image. The last item is a rank 1 tensor containing
-        the weights used to generate the new image. For example, in the default
-        case we'd have a tensor of shape (3,), where the first number
-        corresponds to the first original image (the second item in the batch
-        overall.
+        to construct the new image. The last item is a label. In the default
+        regression mode, this is a rank 1 float tensor containing the weights
+        used to generate the new image. In classification mode, it's a rank 1
+        long tensor with the indices of the source images (i.e. the ones with
+        nonzero weights).
+
+        For example, with all default kwargs y would have shape (3,), where the
+        first number corresponds to the first original image (the second item
+        in the batch overall.
         """
         images = map(self.load_img, self.paths[i:i + self.n])
-        xb, yb = self.mixer.transform(*images)
-        return (*xb, yb)
+        x, weights = self.mixer.transform(*images)
+        y = weights if self.regression else (weights > 0).float()
+        return (*x, y)
 
     def shuffle(self):
         """Note: even when using shuffle=True in dataloader, the current
@@ -162,13 +184,14 @@ class ScaleDataset(Dataset):
     """
 
     def __init__(self, dir_=None, paths=None, shape=(128, 128), n=3,
-                 dist=None, a=5, b=8):
+                 dist=None, a=5, b=8, regression=True):
         assert shape[0] == shape[1] and shape[0] % 2 == 0, 'Invalid shape.'
 
         self.paths = paths or get_image_files(dir_)
         self.shape = shape
         self.n = n
         self.dist = dist or torch.distributions.beta.Beta(a, b)
+        self.regression = regression
 
     def __len__(self):
         return len(self.paths)
@@ -177,7 +200,8 @@ class ScaleDataset(Dataset):
         img = load_img(self.paths[i], shape=self.shape)
         weights = self._generate_weights()
         new_imgs = [img * w for w in weights]
-        return (img, *new_imgs, weights)
+        y = weights if self.regression else (weights > 0).float()
+        return (img, *new_imgs, y)
 
     def _generate_weights(self):
         weights = np.zeros(self.n)
@@ -233,12 +257,16 @@ class QuadrantDataset(Dataset):
 def get_databunch(dir_=None, paths=None,
                   mode:('mixup', 'scale', 'quadrant')='mixup', bs=32,
                   valid_bs_mult=1, train_pct=.9, shuffle_train=True,
-                  drop_last=True, random_state=0, **ds_kwargs):
+                  drop_last=True, random_state=0, max_train_len=None,
+                  max_val_len=None, **ds_kwargs):
     """Wrapper to quickly get train and validation datasets and dataloaders
     from a directory of unlabeled images. This isn't actually a fastai
     databunch, but in practice what it achieves is sort of similar and I
     think the name will help me remember what this does. Files are split
     randomly between train and validation sets.
+
+    This is intended for unsupervised learning - the supervised task already
+    has train and validation splits.
 
     Parameters
     ----------
@@ -254,6 +282,12 @@ def get_databunch(dir_=None, paths=None,
         Percent of files to place in training set.
     random_state: int
         This affects how the data is split.
+    max_train_len: int or None
+        Max number of paths to place in train dataset. Set to small integer
+        to train on subset.
+    max_val_len: int or None
+        Max number of paths to place in val dataset. Set to small integer
+        to evaluate on subset.
     **ds_kwargs: any
         Additional kwargs to pass to the dataset constructor. This includes
         shape (tuple of image height and width), n (number of source images),
@@ -268,7 +302,8 @@ def get_databunch(dir_=None, paths=None,
     train, val = train_test_split(paths, train_size=train_pct,
                                   random_state=random_state)
     DS = eval(mode.title() + 'Dataset')
-    dst, dsv = DS(paths=train, **ds_kwargs), DS(paths=val, **ds_kwargs)
+    dst = DS(paths=train[:max_train_len], **ds_kwargs)
+    dsv = DS(paths=val[:max_val_len], **ds_kwargs)
     dlt = DataLoader(dst, bs, drop_last=drop_last, shuffle=shuffle_train)
     dlv = DataLoader(dsv, int(bs * valid_bs_mult), drop_last=drop_last)
     return Args(ds_train=dst, ds_val=dsv, dl_train=dlt, dl_val=dlv)
