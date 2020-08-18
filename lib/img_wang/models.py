@@ -175,3 +175,37 @@ class Unmixer(BaseModel):
         x = torch.stack(x, dim=1)
         return self.head(x_new, x)
 
+
+class PairwiseLossReduction(nn.Module):
+    """Basically lets us use L2 or L1 distance as a loss function with the
+    standard reductions. If we don't want to reduce, we could use the built-in
+    torch function, but that will usually output a tensor rather than a scalar.
+    """
+
+    @valuecheck
+    def __init__(self, reduce: ('sum', 'mean') = 'mean', **kwargs):
+        super().__init__()
+        self.distance = nn.PairwiseDistance(**kwargs)
+        self.reduce = getattr(torch, reduce)
+
+    def forward(self, y_proba, y_true):
+        return self.reduce(self.distance(y_proba, y_true))
+
+
+class SupervisedEncoderClassifier(nn.Module):
+
+    def __init__(self, enc=None, n_classes=20):
+        super().__init__()
+        self.n_classes = n_classes
+
+        # Layers
+        self.enc = enc or Encoder()
+        self.pool = PoolFlatten('cat')
+        # Concat pool doubles last feature dimension.
+        self.fc = nn.Linear(list(self.enc.parameters())[-1].shape[0] * 2,
+                            n_classes)
+
+    def forward(self, x):
+        x = self.enc(x)
+        x = self.pool(x)
+        return self.fc(x).squeeze()

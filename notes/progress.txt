@@ -112,7 +112,15 @@ Plans: Think about what this problem means and research fixes. Or port lightning
 
 8/17/20
 -------
-Progress: 
+Progress: Laid out some thoughts on different approaches to solve problem and decided to work on regression version of ScaleDS. Wrote loss wrapper for pairwise distance and trained a bit in regression mode - model seems to learn a little bit but still struggles to overfit one batch. Maybe need bigger model/more epochs/lower LR? Ported some lightning functionality to lib.
 
-Plans: 
+Plans: Investigate more to see if scaleDS regression is actually learning (may want to break out GPU for larger/longer training - should still be extremely fast on 1 batch, and it's been getting annoyingly slow on CPU as I increase model size). Less mentally taxing alternative: still tons of documentation to write.
+
+8/18/20
+-------
+Progress:
+
+Plans:
+
+
 

@@ -78,4 +78,13 @@ Pre-Mortem:
 -------
 If loss investigation doesn't fix things, may want to try writing callback to check if model weights are actually changing. Or could continue digging into lightning and try to get tensorboard working to visualize weights and/or gradients.
 
+8/17/20
+-------
+Tasks ranked from easy to hard (guessing):
 
+1. Scale dataset - classification [SUCCESS]
+2. Scale dataset - regression
+3. Mixup dataset - classification [FAIL]
+4. Mixup dataset - regression
+
+One option is to continue experimenting with Mixup classification to try to figure out why that's not working. Another is to experiment with Scale DS regression. That seems less immediately useful, but it does allow me to work with a dataset that's worked in the past, albeit with different labels/loss/etc.
