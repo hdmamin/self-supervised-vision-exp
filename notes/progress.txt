@@ -118,6 +118,12 @@ Plans: Investigate more to see if scaleDS regression is actually learning (may w
 
 8/18/20
 -------
+Progress: Added documentation for datasets and models (lightning modules and data modules are still undocumented).
+
+Plans: Same as today: probably just write lightning documentation and/or read through siamese network repo. If I have more energy, launch larger scaleDS regression run to see if learning is taking place.
+
+8/19/20
+-------
 Progress:
 
 Plans:

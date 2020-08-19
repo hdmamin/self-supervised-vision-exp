@@ -30,10 +30,13 @@ class SmoothSoftmax(nn.Module):
         self.temperature = None if temperature == 'auto' else temperature
 
     def forward(self, x):
-        t = self.temperature
-        if not t:
-            self.temperature = t = int(np.sqrt(x.shape[-1]))
-        return x.div(t).softmax(dim=-1)
+        # Kind of silly but this is called every mini batch so removing an
+        # extra dot attribute access saves a little time.
+        while True:
+            try:
+                return x.div(self.temperature).softmax(dim=-1)
+            except TypeError:
+                self.temperature = int(np.sqrt(x.shape[-1]))
 
 
 class Encoder(nn.Module):
@@ -71,23 +74,53 @@ class TorchvisionEncoder(nn.Module):
     """
 
     def __init__(self, arch='mobilenet_v2', **kwargs):
+        """Create an encoder from a pretrained torchvision model.
+
+        Parameters
+        ----------
+        arch: str
+            Name of architecture to use. See options:
+            https://pytorch.org/docs/stable/torchvision/models.html
+        kwargs: any
+            Addition kwargs will be forwarded to the model constructor.
+        """
         super().__init__()
         model = getattr(tvm, arch)(pretrained=True, **kwargs)
         self.model = dict(model.named_children())['features']
 
     def forward(self, x):
+        """We return features only so this should have a shape like
+        (bs, feature_dim, new height, new width).
+        """
         return self.model(x)
 
 
 class ClassificationHead(nn.Module, ABC):
     """Abstract class that handles the last activation common to all of our
     classification heads. Subclasses must implement a `_forward` method which
-    will be called prior to this activation.
+    will be called prior to this activation. This is arguably overkill in terms
+    of how much abstraction we really need but it was getting annoying copying
+    the `last_act` code over to every head and I want to make it really easy
+    to experiment.
     """
 
     @valuecheck
     def __init__(self, last_act: ('sigmoid', 'softmax', None) = 'sigmoid',
                  temperature=1.0):
+        """
+        Parameters
+        ----------
+        last_act: str or None
+            Determines what the final activation will be. In regression mode,
+            both sigmoid and softmax are viable options. In classification
+            mode, use None.
+        temperature: float or str
+            Passed to SmoothSoftmax if `last_act` is 'softmax'. Larger values
+            incentivize less extreme predictions (e.g. near .5 rather than .99)
+            while values < 1 incentivize predictions near 0 or 1. The only
+            acceptable str is 'auto' which will compute the square root of x's
+            feature dimension.
+        """
         super().__init__()
         if last_act == 'softmax':
             self.last_act = SmoothSoftmax(temperature)
@@ -100,11 +133,29 @@ class ClassificationHead(nn.Module, ABC):
                 self.last_act = identity
 
     def forward(self, x_new, x_stack):
+        """
+        Parameters
+        ----------
+        x_new: torch.tensor
+            The tensor encoding a single image. This is after pooling so we
+            have shape (bs, feature_dim).
+        x_stack: torch.tensor
+            Tensor encoding the n source images. We have shape
+            (bs, n, feature_dim).
+
+        Returns
+        -------
+        torch.tensor: This will have shape (bs, n) regardless of whether we're
+        in classification mode or regression mode.
+        """
         x = self._forward(x_new, x_stack)
         return self.last_act(x)
 
     @abstractmethod
     def _forward(self, x_new, x_stack):
+        """Child classes must implement this method. This does everything
+        except for the final activation.
+        """
         raise NotImplementedError
 
 
@@ -128,6 +179,19 @@ class MLPHead(ClassificationHead):
 
     @valuecheck
     def __init__(self, f_in, fs=(256, 1), act=Mish(), **act_kwargs):
+        """
+        Parameters
+        ----------
+        f_in
+        fs
+        act: callable
+            Can be a nn.Module or something from torch.nn.functional. It's
+            called after each linear layer except the last one (that is handled
+            by `last_act` in the parent class).
+        act_kwargs: any
+            Passed on to parent class to create the final activation function.
+            Available options are `last_act` and `temperature`.
+        """
         super().__init__(**act_kwargs)
         self.fc = nn.ModuleList([nn.Linear(f_in, f_out)
                                  for f_in, f_out in zip((f_in, *fs), fs)])
@@ -135,6 +199,14 @@ class MLPHead(ClassificationHead):
         self.n_layers = len(fs)
 
     def _forward(self, x_new, x_stack):
+        """We start with the same element-wise multiple as in `DotProductHead`.
+        However, instead of simply summing and returning, we follow this with
+        a stack of linear layers. This gives the user the flexibility to
+        increase/decrease the dimension as much as they want before ultimately
+        outputting a tensor of shape (bs, n). Notice the final linear layer
+        has 1 output node: this is squeezed out so we have one tensor of
+        predictions per row.
+        """
         x = x_new[:, None, ...] * x_stack
         for i, layer in enumerate(self.fc, 1):
             x = layer(x)
@@ -193,8 +265,27 @@ class PairwiseLossReduction(nn.Module):
 
 
 class SupervisedEncoderClassifier(nn.Module):
+    """Simple model for supervised task. This was mostly developed for quick
+    troubleshooting while investigating issues with the unsupervised task,
+    but ideally it will be flexible enough that we can still use it when it
+    comes time to transfer from the pretraining task.
+    """
 
     def __init__(self, enc=None, n_classes=20):
+        """
+        Parameters
+        ----------
+        enc: nn.Module
+            A model that accepts a batch of single images (as opposed to the
+            supervised task which takes in n+1 images per row) and outputs a
+            tensor of shape (bs, feature_dim, new_height, new_width). Pooling
+            will occur afterwards so this shouldn't be a vector.
+        n_classes: int
+            Number of output classes in the supervised task. Imagewang uses
+            a training set with 20 classes (multiclass, single label), so even
+            though the validation set has only 10 classes, we need to be
+            capable of predicting all 20.
+        """
         super().__init__()
         self.n_classes = n_classes
 
@@ -206,6 +297,17 @@ class SupervisedEncoderClassifier(nn.Module):
                             n_classes)
 
     def forward(self, x):
+        """
+        Parameters
+        ----------
+        x: torch.tensor
+            Batch of images with shape (bs, 3, height, width).
+
+        Returns
+        -------
+        torch.tensor: Logits with shape (bs, n_classes). These have NOT been
+        passed through a final activation function.
+        """
         x = self.enc(x)
         x = self.pool(x)
         return self.fc(x).squeeze()

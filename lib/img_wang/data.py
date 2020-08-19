@@ -137,6 +137,9 @@ class MixupDataset(Dataset):
         self.regression = regression
 
     def __len__(self):
+        """Each mini batch uses n items so the last (n-1) paths do not have
+        enough following paths to create a full batch.
+        """
         return len(self.paths) - self.n + 1
 
     def __getitem__(self, i):
@@ -185,6 +188,36 @@ class ScaleDataset(Dataset):
 
     def __init__(self, dir_=None, paths=None, shape=(128, 128), n=3,
                  dist=None, a=5, b=8, regression=True):
+        """
+        Parameters
+        ----------
+        dir_: str or Path
+            If provided, we'll get all the image paths in this dir.
+        paths: list[str]
+            If we already have a list of paths, we can provide this instead of
+            dir_. This lets us pass in a subset instead of using all image
+            files in a directory.
+        shape: tuple[int]
+            Resize images to this size. I believe it's (H, W) though I should
+            probably check to confirm).
+        n: int
+            Number of image variants to create. Note that the original image
+            will also be returned so one item will have n+1 images.
+        dist: torch.distributions
+            This can be any object with a `sample` method. By default we use
+            a beta distribution, mostly just because this is what I was already
+            using for MixupDataset.
+        a: int
+            Parametrizes beta distribution. If you pass in a different `dist`
+            object, this will be ignored.
+        b: int
+            Parametrizes beta distribution. If you pass in a different `dist`
+            object, this will be ignored.
+        regression: bool
+            If True, use regression mode: the labels will be the scaling
+            factors used for each new image. If False, we'll use classification
+            mode (1 if an image is scaled by a nonzero weight, 0 otherwise).
+        """
         assert shape[0] == shape[1] and shape[0] % 2 == 0, 'Invalid shape.'
 
         self.paths = paths or get_image_files(dir_)
@@ -204,6 +237,13 @@ class ScaleDataset(Dataset):
         return (img, *new_imgs, y)
 
     def _generate_weights(self):
+        """Sample weights to scale each new image.
+
+        Returns
+        -------
+        torch.tensor: n numbers which will be used to scale the n new images
+        we create in __getitem__. n-2 of these weights will be nonzero.
+        """
         weights = np.zeros(self.n)
         p = self.dist.sample()
         if self.n > 1:
@@ -280,6 +320,11 @@ def get_databunch(dir_=None, paths=None,
         size. To use the same batch size for both, pass in 1.
     train_pct: float
         Percent of files to place in training set.
+    shuffle_train: bool
+        If True, the train dataloader will shuffle items between epochs.
+    drop_last: bool
+        If True, ensure that no half batches are created if the number of
+        items in the dataset doesn't divide evenly by the batch size.
     random_state: int
         This affects how the data is split.
     max_train_len: int or None
