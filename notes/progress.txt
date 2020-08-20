@@ -124,9 +124,17 @@ Plans: Same as today: probably just write lightning documentation and/or read th
 
 8/19/20
 -------
+Progress: Read a bit about contrastive loss and took first stab at implementing it. Have a functional version and an OOP version, both of which seem to work, but some work remains.
+
+Plans: Read more about contrastive loss variant that uses softmax and cosine distance and try implementing that (maybe make it so there's 1 top level interface but the user can specify distance='cosine' or mode='softmax' or something). If that gets done, could look into adapting this for use on soft targets.
+
+8/20/20
+-------
 Progress:
 
 Plans:
+
+
 
 
 

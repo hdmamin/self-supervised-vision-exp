@@ -44,6 +44,21 @@ class Encoder(nn.Module):
     def __init__(self, n=3, c_in=3, fs=(8, 16, 32, 64, 128, 256),
                  strides=(2, 2, 1, 1, 1, 1), kernel_size=3, norm=True,
                  padding=0, act=Mish(), res_blocks=0, **res_kwargs):
+        """TODO: encoder docs
+
+        Parameters
+        ----------
+        n
+        c_in
+        fs
+        strides
+        kernel_size
+        norm
+        padding
+        act
+        res_blocks
+        res_kwargs
+        """
         super().__init__()
         if len(fs) != len(strides):
             raise ValueError('Strides and f_dims must be same length (1 '
