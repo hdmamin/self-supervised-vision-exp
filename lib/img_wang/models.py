@@ -11,13 +11,51 @@ from incendio.core import BaseModel
 from incendio.layers import Mish, ConvBlock, ResBlock
 
 
-class SmoothSoftmax(nn.Module):
-    """Softmax with temperature baked in."""
+# class SmoothSoftmax(nn.Module):
+#     """Softmax with temperature baked in."""
+#
+#     def __init__(self, temperature='auto'):
+#         """
+#         Parameters
+#         ----------
+#         temperature: float or str
+#             If a float, this is the temperature to divide activations by before
+#             applying the softmax. Values larger than 1 soften the distribution
+#             while values between 0 and 1 sharpen it. If str ('auto'), this will
+#             compute the square root of the last dimension of x's shape the
+#             first time the forward method is called and use that for subsequent
+#             calls.
+#         """
+#         super().__init__()
+#         self.temperature = None if temperature == 'auto' else temperature
+#
+#     def forward(self, x):
+#         # Kind of silly but this is called every mini batch so removing an
+#         # extra dot attribute access saves a little time.
+#         while True:
+#             try:
+#                 return x.div(self.temperature).softmax(dim=-1)
+#             except TypeError:
+#                 self.temperature = np.sqrt(x.shape[-1])
 
-    def __init__(self, temperature='auto'):
+
+class SmoothSoftmaxBase(nn.Module):
+    """Parent class of SmoothSoftmax and SmoothLogSoftmax (softmax or log
+    softmax with temperature baked in). There shouldn't be a need to
+    instantiate this class directly.
+    """
+
+    def __init__(self, log=False, temperature='auto', dim=-1):
         """
         Parameters
         ----------
+        log: bool
+            If True, use log softmax (if this is the last activation in a
+            network, it can be followed by nn.NLLLoss). If False, use softmax
+            (this is more useful if you're doing something attention-related:
+            no standard torch loss functions expect softmax outputs). This
+            argument is usually passed implicitly by the higher level interface
+            provided by the child classes.
         temperature: float or str
             If a float, this is the temperature to divide activations by before
             applying the softmax. Values larger than 1 soften the distribution
@@ -25,18 +63,42 @@ class SmoothSoftmax(nn.Module):
             compute the square root of the last dimension of x's shape the
             first time the forward method is called and use that for subsequent
             calls.
+        dim: int
+            The dimension to compute the softmax over.
         """
         super().__init__()
         self.temperature = None if temperature == 'auto' else temperature
+        self.act = nn.LogSoftmax(dim=dim) if log else nn.Softmax(dim=dim)
 
     def forward(self, x):
+        """
+        Parameters
+        ----------
+        x: torch.float
+
+        Returns
+        -------
+        torch.float: Same shape as x.
+        """
         # Kind of silly but this is called every mini batch so removing an
         # extra dot attribute access saves a little time.
         while True:
             try:
-                return x.div(self.temperature).softmax(dim=-1)
+                return self.act(x.div(self.temperature))
             except TypeError:
-                self.temperature = int(np.sqrt(x.shape[-1]))
+                self.temperature = np.sqrt(x.shape[-1])
+
+
+class SmoothSoftmax(SmoothSoftmaxBase):
+
+    def __init__(self, temperature='auto', dim=-1):
+        super().__init__(log=False, temperature=temperature, dim=dim)
+
+
+class SmoothLogSoftmax(SmoothSoftmaxBase):
+
+    def __init__(self, temperature='auto', dim=-1):
+        super().__init__(log=True, temperature=temperature, dim=dim)
 
 
 class Encoder(nn.Module):
@@ -120,7 +182,7 @@ class ClassificationHead(nn.Module, ABC):
     """
 
     @valuecheck
-    def __init__(self, last_act: ('sigmoid', 'softmax', None) = 'sigmoid',
+    def __init__(self, last_act: ('sigmoid', 'softmax', None)='sigmoid',
                  temperature=1.0):
         """
         Parameters

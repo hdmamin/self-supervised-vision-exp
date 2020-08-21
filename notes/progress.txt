@@ -130,9 +130,15 @@ Plans: Read more about contrastive loss variant that uses softmax and cosine dis
 
 8/20/20
 -------
-Progress:
+Progress: Read a little about contrastive loss variant. Ended up deciding that with my current setup, this would work best split between a very simple classification head that computes the cosine similarity (or other metric if desired), leaves the temperature scaling and log softmax to the last activation, and uses NLLLoss as the loss function. Ended up refactoring smoothsoftmax to provide a logsoftmax option.
 
-Plans:
+Plans: Update ClassificationHead (and other classes if necessary) to accomodate log variant of smoothsoftmax (realized torch losses expect either logits or logsoftmax outputs). Maybe return to contrastive loss issues (see nb04 todo).
+
+8/21/20
+-------
+Progress: 
+
+Plans: 
 
 
 
