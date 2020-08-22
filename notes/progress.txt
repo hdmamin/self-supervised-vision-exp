@@ -136,11 +136,15 @@ Plans: Update ClassificationHead (and other classes if necessary) to accomodate 
 
 8/21/20
 -------
-Progress: 
+Progress: Updated classification head to allow log softmax. Built contrastiveloss2d variant that seems to be working as I envisioned when comparing 1 image to multiple others. Wrote just enough documentation to remember what I'm doing but it still needs to be cleaned up.
+
+Plans: Options depending on energy level. Easy task: port and document contrastive loss 1d/2d/functional forms. Medium task: work on contrastive loss variant for scalar inputs (maybe this already works? As in works from a python standpoint, no idea if this will work well in practice from an ML standpoint). Harder task: return to the problem of scaleDS regression by training a larger model for longer on paperspace now that wifi's working again.
+
+8/22/20
+-------
+Progress:
 
 Plans: 
-
-
 
 
 

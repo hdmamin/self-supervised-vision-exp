@@ -182,7 +182,8 @@ class ClassificationHead(nn.Module, ABC):
     """
 
     @valuecheck
-    def __init__(self, last_act: ('sigmoid', 'softmax', None)='sigmoid',
+    def __init__(self,
+                 last_act:('sigmoid', 'softmax', 'log_softmax', None)='sigmoid',
                  temperature=1.0):
         """
         Parameters
@@ -201,9 +202,11 @@ class ClassificationHead(nn.Module, ABC):
         super().__init__()
         if last_act == 'softmax':
             self.last_act = SmoothSoftmax(temperature)
+        elif last_act == 'log_softmax':
+            self.last_act = SmoothLogSoftmax(temperature)
         else:
             warnings.warn('Temperature is ignored when last activation is '
-                          'not softmax.')
+                          'not softmax or log_softmax.')
             if last_act == 'sigmoid':
                 self.last_act = torch.sigmoid
             if last_act is None:
@@ -325,20 +328,34 @@ class Unmixer(BaseModel):
         return self.head(x_new, x)
 
 
-class PairwiseLossReduction(nn.Module):
-    """Basically lets us use L2 or L1 distance as a loss function with the
-    standard reductions. If we don't want to reduce, we could use the built-in
-    torch function, but that will usually output a tensor rather than a scalar.
+class SimilarityHead(ClassificationHead):
+    """Classifier head that lets us easily use a contrastive loss variant. It
+    computes cosine similarity between x_new and each vector in x_stack,
+    divides by a temperature, and passes the outputs through a log_softmax
+    operation. This can then be fed directly into nn.NLLLoss. This avoids
+    any trouble with passing x to the loss function which is currently
+    difficult in Incendio.
     """
 
-    @valuecheck
-    def __init__(self, reduce: ('sum', 'mean') = 'mean', **kwargs):
-        super().__init__()
-        self.distance = nn.PairwiseDistance(**kwargs)
-        self.reduce = getattr(torch, reduce)
+    def __init__(self, similarity=None, temperature='auto'):
+        """
+        Parameters
+        ----------
+        similarity: callable
+            nn.Module or function that computes a similarity measure
+            between two vectors. Cosine similarity is used if none is passed
+            in.
+        temperature: str or float
+            Only acceptable str is 'auto', which will use the square root of
+            the feature dimension of x. You can also manually specify a float.
+            I'm not sure what a good value would be for this.
+        """
+        super().__init__(last_act='log_softmax', temperature=temperature)
+        self.similarity = similarity or nn.CosineSimilarity(dim=-1)
+        warnings.warn('Remember to use nn.NLLLoss when using SimilarityHead.')
 
-    def forward(self, y_proba, y_true):
-        return self.reduce(self.distance(y_proba, y_true))
+    def _forward(self, x_new, x_stack):
+        return self.similarity(x_new[:, None, ...], x_stack)
 
 
 class SupervisedEncoderClassifier(nn.Module):
@@ -388,3 +405,21 @@ class SupervisedEncoderClassifier(nn.Module):
         x = self.enc(x)
         x = self.pool(x)
         return self.fc(x).squeeze()
+
+
+class PairwiseLossReduction(nn.Module):
+    """Basically lets us use L2 or L1 distance as a loss function with the
+    standard reductions. If we don't want to reduce, we could use the built-in
+    torch function, but that will usually output a tensor rather than a scalar.
+    """
+
+    @valuecheck
+    def __init__(self, reduce: ('sum', 'mean') = 'mean', **kwargs):
+        super().__init__()
+        self.distance = nn.PairwiseDistance(**kwargs)
+        self.reduce = getattr(torch, reduce)
+
+    def forward(self, y_proba, y_true):
+        return self.reduce(self.distance(y_proba, y_true))
+
+
