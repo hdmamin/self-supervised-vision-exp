@@ -11,34 +11,6 @@ from incendio.core import BaseModel
 from incendio.layers import Mish, ConvBlock, ResBlock
 
 
-# class SmoothSoftmax(nn.Module):
-#     """Softmax with temperature baked in."""
-#
-#     def __init__(self, temperature='auto'):
-#         """
-#         Parameters
-#         ----------
-#         temperature: float or str
-#             If a float, this is the temperature to divide activations by before
-#             applying the softmax. Values larger than 1 soften the distribution
-#             while values between 0 and 1 sharpen it. If str ('auto'), this will
-#             compute the square root of the last dimension of x's shape the
-#             first time the forward method is called and use that for subsequent
-#             calls.
-#         """
-#         super().__init__()
-#         self.temperature = None if temperature == 'auto' else temperature
-#
-#     def forward(self, x):
-#         # Kind of silly but this is called every mini batch so removing an
-#         # extra dot attribute access saves a little time.
-#         while True:
-#             try:
-#                 return x.div(self.temperature).softmax(dim=-1)
-#             except TypeError:
-#                 self.temperature = np.sqrt(x.shape[-1])
-
-
 class SmoothSoftmaxBase(nn.Module):
     """Parent class of SmoothSoftmax and SmoothLogSoftmax (softmax or log
     softmax with temperature baked in). There shouldn't be a need to
