@@ -379,19 +379,4 @@ class SupervisedEncoderClassifier(nn.Module):
         return self.fc(x).squeeze()
 
 
-class PairwiseLossReduction(nn.Module):
-    """Basically lets us use L2 or L1 distance as a loss function with the
-    standard reductions. If we don't want to reduce, we could use the built-in
-    torch function, but that will usually output a tensor rather than a scalar.
-    """
-
-    @valuecheck
-    def __init__(self, reduce: ('sum', 'mean') = 'mean', **kwargs):
-        super().__init__()
-        self.distance = nn.PairwiseDistance(**kwargs)
-        self.reduce = getattr(torch, reduce)
-
-    def forward(self, y_proba, y_true):
-        return self.reduce(self.distance(y_proba, y_true))
-
 
