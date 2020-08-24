@@ -230,7 +230,8 @@ class MLPHead(ClassificationHead):
     """
 
     @valuecheck
-    def __init__(self, f_in, fs=(256, 1), act=Mish(), **act_kwargs):
+    def __init__(self, f_in, fs=(256, 1), act=Mish(), batch_norm=True,
+                 **act_kwargs):
         """
         Parameters
         ----------
@@ -245,10 +246,19 @@ class MLPHead(ClassificationHead):
             Available options are `last_act` and `temperature`.
         """
         super().__init__(**act_kwargs)
-        self.fc = nn.ModuleList([nn.Linear(f_in, f_out)
-                                 for f_in, f_out in zip((f_in, *fs), fs)])
-        self.act = act
         self.n_layers = len(fs)
+        # self.fc = nn.ModuleList([nn.Linear(f_in, f_out)
+        #                          for f_in, f_out in zip((f_in, *fs), fs)])
+
+        layers = []
+        for i, (f_in, f_out) in enumerate(zip((f_in, *fs), fs), 1):
+            layers.append(nn.Linear(f_in, f_out))
+            if i < self.n_layers:
+                if batch_norm: layers.append(nn.BatchNorm2d())
+                layers.append(act)
+        self.fc_stack = nn.Sequential(*layers)
+
+        self.act = act
 
     def _forward(self, x_new, x_stack):
         """We start with the same element-wise multiple as in `DotProductHead`.
@@ -260,11 +270,43 @@ class MLPHead(ClassificationHead):
         predictions per row.
         """
         x = x_new[:, None, ...] * x_stack
-        for i, layer in enumerate(self.fc, 1):
-            x = layer(x)
-            if i < self.n_layers:
-                x = self.act(x)
+        # for i, layer in enumerate(self.fc, 1):
+        #     x = layer(x)
+        #     if i < self.n_layers:
+        #         x = self.act(x)
+
+        x = self.fc_stack(x)
         return x.squeeze(-1)
+
+
+class SimilarityHead(ClassificationHead):
+    """Classifier head that lets us easily use a contrastive loss variant. It
+    computes cosine similarity between x_new and each vector in x_stack,
+    divides by a temperature, and passes the outputs through a log_softmax
+    operation. This can then be fed directly into nn.NLLLoss. This avoids
+    any trouble with passing x to the loss function which is currently
+    difficult in Incendio.
+    """
+
+    def __init__(self, similarity=None, temperature='auto'):
+        """
+        Parameters
+        ----------
+        similarity: callable
+            nn.Module or function that computes a similarity measure
+            between two vectors. Cosine similarity is used if none is passed
+            in.
+        temperature: str or float
+            Only acceptable str is 'auto', which will use the square root of
+            the feature dimension of x. You can also manually specify a float.
+            I'm not sure what a good value would be for this.
+        """
+        super().__init__(last_act='log_softmax', temperature=temperature)
+        self.similarity = similarity or nn.CosineSimilarity(dim=-1)
+        warnings.warn('Remember to use nn.NLLLoss when using SimilarityHead.')
+
+    def _forward(self, x_new, x_stack):
+        return self.similarity(x_new[:, None, ...], x_stack)
 
 
 class Unmixer(BaseModel):
@@ -298,36 +340,6 @@ class Unmixer(BaseModel):
         x_new, *x = [self.pool(self.encoder(x)) for x in xb]
         x = torch.stack(x, dim=1)
         return self.head(x_new, x)
-
-
-class SimilarityHead(ClassificationHead):
-    """Classifier head that lets us easily use a contrastive loss variant. It
-    computes cosine similarity between x_new and each vector in x_stack,
-    divides by a temperature, and passes the outputs through a log_softmax
-    operation. This can then be fed directly into nn.NLLLoss. This avoids
-    any trouble with passing x to the loss function which is currently
-    difficult in Incendio.
-    """
-
-    def __init__(self, similarity=None, temperature='auto'):
-        """
-        Parameters
-        ----------
-        similarity: callable
-            nn.Module or function that computes a similarity measure
-            between two vectors. Cosine similarity is used if none is passed
-            in.
-        temperature: str or float
-            Only acceptable str is 'auto', which will use the square root of
-            the feature dimension of x. You can also manually specify a float.
-            I'm not sure what a good value would be for this.
-        """
-        super().__init__(last_act='log_softmax', temperature=temperature)
-        self.similarity = similarity or nn.CosineSimilarity(dim=-1)
-        warnings.warn('Remember to use nn.NLLLoss when using SimilarityHead.')
-
-    def _forward(self, x_new, x_stack):
-        return self.similarity(x_new[:, None, ...], x_stack)
 
 
 class SupervisedEncoderClassifier(nn.Module):
@@ -377,6 +389,4 @@ class SupervisedEncoderClassifier(nn.Module):
         x = self.enc(x)
         x = self.pool(x)
         return self.fc(x).squeeze()
-
-
 

@@ -88,3 +88,52 @@ Tasks ranked from easy to hard (guessing):
 4. Mixup dataset - regression
 
 One option is to continue experimenting with Mixup classification to try to figure out why that's not working. Another is to experiment with Scale DS regression. That seems less immediately useful, but it does allow me to work with a dataset that's worked in the past, albeit with different labels/loss/etc.
+
+8/23/20
+-------
+Brainstorming possible causes of the failure to learn (for now, I'm talking mostly about the scale regression DS):
+
+1. Bug in loss function. 
+    -took another look at pairwise loss reduction and everything looks fine to me.
+2. Bug in network.
+    -# TODO: Network trains fine on scale DS classification so this would be odd. Can try training a tiny, simple network to try to reduce the chances of this.
+3. Bug in network last activation.
+    -# TODO: looks like I used sigmoid but can try one more time on GPU]
+4. Bug in dataset.
+    -# TODO: check that labels are formatted appropriately for chosen loss function.]
+5. Task is too complex.
+    -# TODO: try regression task with smaller n. Or brainstorm other simple alternative tasks. However, scale DS is already supposed to be completely trivial. Not sure how much easier I can make it.]
+6. LR is far too high/low.
+    -# TODO: If I can make it compatible with fastai, I could use their LR finder. Or the same with lightning.]
+7. Gradients are exploding/vanishing.
+    -# TODO: Run tensorboard (or maybe log in cometML). Not sure what the solution to this would be - maybe different initialization scheme?]
+8. Activations are getting mixed across batches/dimensions in unintended ways.
+    -# TODO: ??? Go through models again I guess? See if there's a tool that can catch this more effectively.]
+9. Multiple calls to encoder before loss.backward() is screwing up computation graph.
+    -# TODO: Think. Classification model does this too so I don't know why it would be different here.]
+10. Feature scaling makes it hard to find the original scalar values.
+    -# TODO: Feel like this should be learnable regardless. Check if I scale to 0-1 before or after the "augmentation"-esque scaling.]
+11. Sampling distribution chooses weights that are too extreme/not extreme enough.
+    -# TODO: try different distribution or different parameters of same distribution.]
+12. Dataloader problem (e.g. batching images incorrectly).
+    -# TODO: Don't think this is happening but can check again.]
+13. "class" imbalance: 2 "positives" and 1 "negative" for each example
+    -#TODO: Try n that produces equal numbers of positives/negatives? But maybe it will just switch from predicting ones or .67 to .5.
+14. Could training on a tiny subset somehow be causing problems?
+    -# TODO: Seems unlikely but maybe by giving more examples to train on it will be easier for the net to learn? Still should be able to overfit regardless though, so I don't think this explains it.]
+15. Small batch size somehow causes problems?
+    -# TODO: Try training on larger bs. Can't see why this would help though.
+16. Network too small
+    -# TODO: Can't imagine this is necessary for scale DS (very simple task), but try training an ENORMOUS net.
+17. Getting stuck in local minimum
+    -# TODO: Use Karpathy's trick of initializing bias of final layer.
+18. Mish implementation is broken/mish is generally inappropriate for this type of model.
+    -# TODO: try something built in (e.g. leaky relu)
+
+online suggestions:
+-# TODO: train on random noise. See if learning looks any different.
+-# TODO: look at histograms of weights. Look out for very large weights and severely non-normal distributions.
+-# TODO: gradient clipping to prevent exploding grads.
+-# TODO: in lieu of LR finder, can try multipling the LR by 10 until I get NaNs. Then try dividing by 10 until I get no learning.
+-# TODO: network predicting constant means it is effectively outputting the bias (or bias+1). Neurons are activated all/none of the time. Sounds like better initialization might fix this.
+    -Or maybe add batch norm to classification head.

@@ -144,9 +144,15 @@ Plans: Options depending on energy level. Easy task: port and document contrasti
 -------
 Progress: Set up paperspace for img wang experiments (pull data, install new packages, etc.). Re-ran some experiments on GPU but not a ton of progress: confirmed that scaleDS classification seems to work okay, but still failing to learn anything remotely useful on the other 3 tasks. 
 
-Plans: Realized similarityHead cannot use NLLLoss (I think this is only available for single label?) so figure out what loss to use for that head (may need to rework head a bit or build custom loss). Check pairwiseloss reduction to make sure it's doing what I think it is - since the classificaiton task works for scale DS, I'm thinking the problem for regression must be either the loss function or how it interacts with the last activation. If this doesn't reveal problems, spend some time considering how to proceed. Is there a way to tell if a clask is just impossible for a randomly initialized network to learn on?
+Plans: Realized similarityHead cannot use NLLLoss (I think this is only available for single label?) so figure out what loss to use for that head (may need to rework head a bit or build custom loss). Check pairwiseloss reduction to make sure it's doing what I think it is - since the classificaiton task works for scale DS, I'm thinking the problem for regression must be either the loss function or how it interacts with the last activation. If this doesn't reveal problems, spend some time considering how to proceed. Is there a way to tell if a task is just impossible for a randomly initialized network to learn on?
 
 8/23/20
+-------
+Progress: Brainstormed and wrote down all conceivable causes of failure to learn. Did some reading and found a few more possible issues. Updated MLPHead to allow for one possible fix (optional batch norm after linear layers to avoid neuron saturation). Updated incendio with inverse_sigmoid, cometcallback, and is_builtin() (mostly written already but added some documentation and updated kwargs to reflect new callback interface). Wrote function to update a layer's bias, optionally using the inverse sigmoid trick, and added to incendio.
+
+Plans: Most promising strategies to try first (choose whatever sounds most appealing): train on random noise (maybe this could be a callback? Or a different dataset mode?); replace mish activations with something builtin; use batch norm in MLPHead. Simpler task: Add inverse sigmoid trick to one or more classification heads. Careful: given that we have supervised and unsupervised tasks, regression and classification tasks, etc., we need to make sure we implement this in a way that is a. valid, and b. flexible enough to account for all cases, and c. ideally obscured from the user-facing interface.
+
+8/24/20
 -------
 Progress: 
 
