@@ -111,30 +111,53 @@ class MixupDataset(Dataset):
     """
 
     def __init__(self, dir_=None, paths=(), shape=(128, 128), n=3,
-                 regression=True, **kwargs):
-        """Classification mode should be used with
-        F.binary_cross_entropy_with_logits loss.
-        Regression mode should probably be F.mse_loss or F.l1_loss but may
-        need to mess around with the reduction dimension a bit to get
-        everything working as intended.
+                 regression=True, noise=False, **kwargs):
+        """Classification mode usually uses something like
+        F.binary_cross_entropy_with_logits loss. Regression mode usually
+        uses something like PairwiseLossReduction (basically MSE on a vector
+        output).
 
         Parameters
         ----------
-        dir_
-        paths
-        shape
-        n
-        regression
-        kwargs
+        dir_: str or Path
+            Directory containing source images.
+        paths: Iterable[str or Path]
+            Alternately, user can provide a list of image paths instead of a
+            directory name. Exactly one of these should be not None.
+        shape: tuple[int]
+            Shape to resize images to. Just use defaults always (the image wang
+            challenge was designed with specific shapes in mind to allow for
+            direct comparisons).
+        n: int
+            Number of source images to use. Must be >=2 otherwise there's
+            nothing to mix.
+        regression: bool
+            If True, you'll get a dataset for the regression task (i.e. the
+            labels will be floats between 0 and 1 corresponding to the weight
+            corresponding to each source image when generating the new image).
+            If False, multi-label classification mode is used (i.e. each label
+            is a 1-hot-encoded vector where 1 means a source image had a
+            nonzero weight when constructing the new image and 0 means it
+            didn't).
+        noise: bool
+            If True, each image tensor will be replaced with random noise.
+            This can be useful when trying to diagnose whether a model is
+            learning anything at all.
+        kwargs: any
+            Additional kwargs are passed to ImageMixer. These are typically
+            either `a` and `b` (parameters for the default sampling
+            distribution, beta) or `dist`, an object providing a `sample`
+            method that generates a random float between 0 and 1.
         """
         if not dir_ and not paths:
             raise ValueError('One of dir_ or paths should be non-null.')
 
-        self.paths = get_image_files(dir_) if dir_ else list(paths)
+        self.paths = list(paths) or get_image_files(dir_)
         self.n = n
         self.mixer = ImageMixer(n=3, **kwargs)
         self.load_img = partial(load_img, shape=shape)
         self.regression = regression
+        self.noise = noise
 
     def __len__(self):
         """Each mini batch uses n items so the last (n-1) paths do not have
@@ -166,6 +189,7 @@ class MixupDataset(Dataset):
         images = map(self.load_img, self.paths[i:i + self.n])
         x, weights = self.mixer.transform(*images)
         y = weights if self.regression else (weights > 0).float()
+        if self.noise: x = randn_like(*x)
         return (*x, y)
 
     def shuffle(self):
@@ -187,7 +211,7 @@ class ScaleDataset(Dataset):
     """
 
     def __init__(self, dir_=None, paths=None, shape=(128, 128), n=3,
-                 dist=None, a=5, b=8, regression=True):
+                 dist=None, a=5, b=8, regression=True, noise=False):
         """
         Parameters
         ----------
@@ -217,6 +241,10 @@ class ScaleDataset(Dataset):
             If True, use regression mode: the labels will be the scaling
             factors used for each new image. If False, we'll use classification
             mode (1 if an image is scaled by a nonzero weight, 0 otherwise).
+        noise: bool
+            If True, each image tensor will be replaced with random noise.
+            This can be useful when trying to diagnose whether a model is
+            learning anything at all.
         """
         assert shape[0] == shape[1] and shape[0] % 2 == 0, 'Invalid shape.'
 
@@ -225,6 +253,7 @@ class ScaleDataset(Dataset):
         self.n = n
         self.dist = dist or torch.distributions.beta.Beta(a, b)
         self.regression = regression
+        self.noise = noise
 
     def __len__(self):
         return len(self.paths)
@@ -234,6 +263,7 @@ class ScaleDataset(Dataset):
         weights = self._generate_weights()
         new_imgs = [img * w for w in weights]
         y = weights if self.regression else (weights > 0).float()
+        if self.noise: img, *new_imgs = randn_like(img, *new_imgs)
         return (img, *new_imgs, y)
 
     def _generate_weights(self):
@@ -263,12 +293,13 @@ class QuadrantDataset(Dataset):
     basic output format as MixupDataset to allow us to test the same models.
     """
 
-    def __init__(self, dir_=None, paths=None, shape=(128, 128)):
+    def __init__(self, dir_=None, paths=None, shape=(128, 128), noise=False):
         assert shape[0] == shape[1] and shape[0] % 2 == 0, 'Invalid shape.'
 
         self.paths = paths or get_image_files(dir_)
         self.shape = shape
         self.mid_idx = self.shape[0] // 2
+        self.noise = noise
 
     def __len__(self):
         return len(self.paths)
@@ -276,7 +307,9 @@ class QuadrantDataset(Dataset):
     def __getitem__(self, i):
         img = load_img(self.paths[i], self.shape)
         i = np.random.randint(0, 4)
-        return self.select_quadrant(img, i), i
+        x = self.select_quadrant(img, i)
+        if self.noise: x = randn_like(x)
+        return x, i
 
     def select_quadrant(self, img, i):
         """
@@ -403,4 +436,22 @@ def ds_subset(ds, n, random=False, attr='samples'):
     setattr(ds, attr, [samples[i] for i in np.random.randint(0, len(ds), n)] \
             if random else samples[:n])
     return ds
+
+
+def randn_like(*args):
+    """Create random noise with the same shape as each input tensor. Use this
+    to make a dataset output random noise for testing purposes (this lets us
+    see if training on the real dataset looks any different from training on
+    random noise).
+
+    Parameters
+    ----------
+    args: torch.tensor
+
+    Returns
+    -------
+    tuple[torch.tensor]: Tensors with same shapes as the inputs but whose
+    values are generated randomly from a normal distribution.
+    """
+    return tuple(torch.randn_like(arg) for arg in args)
 

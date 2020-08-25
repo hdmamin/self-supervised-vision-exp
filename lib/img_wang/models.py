@@ -9,6 +9,7 @@ import warnings
 from htools import valuecheck, identity
 from incendio.core import BaseModel
 from incendio.layers import Mish, ConvBlock, ResBlock
+from incendio.utils import init_bias_constant_
 
 
 class SmoothSoftmaxBase(nn.Module):
@@ -231,21 +232,57 @@ class MLPHead(ClassificationHead):
 
     @valuecheck
     def __init__(self, f_in, fs=(256, 1), act=Mish(), batch_norm=True,
-                 **act_kwargs):
+                 ds_n=3, bias_trick=False, **act_kwargs):
         """
         Parameters
         ----------
-        f_in
-        fs
+        f_in: int
+            Incoming feature dimension. This will usually be 2*c where c is
+            the number of channels output by the encoder. We typically use
+            concat pooling which doubles this dimension.
+        fs: Iterable[int]
+            Output dimension for each linear layer. The length of this list
+            will determine the number of layers. The last value should be 1.
         act: callable
             Can be a nn.Module or something from torch.nn.functional. It's
             called after each linear layer except the last one (that is handled
             by `last_act` in the parent class).
+        batch_norm: bool
+            If True, add batch norm after each linear layer. Early training
+            results without batch norm suggest we may be suffering from
+            saturated neurons, so this may help.
+            # TODO: see if this works, but might want to remove it here and
+            place it after the concat pool instead. Read on stack that bn
+            before the final layer can cause problems since it's introducing
+            noise very late in the network and only leaves us 1 layer to learn
+            the whole mapping.
+        ds_n: int
+            Number of source images in dataset task (e.g. with the default
+            Mixup task, we use 3 source images, 2 of which are mixed together).
+        bias_trick: bool
+            If True, this will try to use Karpathy's trick of initializing the
+            last layer's bias term to the constant that sigmoid will convert
+            to the majority class percentage. In our context, this is 2/n in
+            classification mode, where n is the number of source images (note:
+            we slightly adjust this downward if n=2 since inverse_sigmoid(1)
+            throws an error). This implementation is NOT meant to be used with
+            regression mode (technically we could pass in target_pct itself
+            rather than n, which would allow for that, but I'm trying to keep
+            things simple and finding that value is not always trivial: we
+            either need to simulate random values from dist or look up the mean
+            of whatever distribution we're using, which may change).
         act_kwargs: any
             Passed on to parent class to create the final activation function.
             Available options are `last_act` and `temperature`.
         """
         super().__init__(**act_kwargs)
+        if bias_trick:
+            if act_kwargs.pop('last_act', None) not in ('sigmoid', 'none'):
+                raise ValueError('`bias_trick` only available when `last_act` '
+                                 'is "sigmoid" or "none".')
+            warnings.warn('This implementation of `bias_trick` is only '
+                          'intended for classification mode.')
+
         self.n_layers = len(fs)
         # self.fc = nn.ModuleList([nn.Linear(f_in, f_out)
         #                          for f_in, f_out in zip((f_in, *fs), fs)])
@@ -256,8 +293,12 @@ class MLPHead(ClassificationHead):
             if i < self.n_layers:
                 if batch_norm: layers.append(nn.BatchNorm2d())
                 layers.append(act)
-        self.fc_stack = nn.Sequential(*layers)
+            elif bias_trick:
+                # No batch norm or activation added in this case so fc is last.
+                # Inverse sigmoid of 1 causes divide by zero error.
+                init_bias_constant_(layers[-1], target_pct=min(2/ds_n, .999))
 
+        self.fc_stack = nn.Sequential(*layers)
         self.act = act
 
     def _forward(self, x_new, x_stack):
@@ -350,7 +391,9 @@ class SupervisedEncoderClassifier(nn.Module):
     """
 
     def __init__(self, enc=None, n_classes=20):
-        """
+        """Can't use bias initialization trick on last layer because this is
+        multiclass classification.
+
         Parameters
         ----------
         enc: nn.Module

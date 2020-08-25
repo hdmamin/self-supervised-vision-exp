@@ -154,6 +154,12 @@ Plans: Most promising strategies to try first (choose whatever sounds most appea
 
 8/24/20
 -------
+Progress: Wrote function to generate random noise in the shape of each input tensor and updated all three datasets to have this option. Added inverse_sigmoid bias initialization option to MLPHead (checked the other heads but the ones I've written so far don't have layers with biases). Found some missing documentation and wrote it. Read a little about batch norm - will have to experiment and see how this goes, some advise to skip this in final layer(s) but I suspect the lack of it is causing the issues with my last layer, resulting in the model effectively always predicting the bias.
+
+Plans: Ideally, try a simple experiment or two (new random noise mode, replace mish with leaky relu, or batch norm in MLP head are the tactics to start with). If I really don't want to, could write gradient clipping callback, research more about reasonable values of margin in contrastive loss, or read more through my open github repos or loss articles and try to reduce some of my tab clutter on this project.
+
+8/25/20
+-------
 Progress: 
 
 Plans: 
