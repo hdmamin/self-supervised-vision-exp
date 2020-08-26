@@ -189,7 +189,7 @@ class MixupDataset(Dataset):
         images = map(self.load_img, self.paths[i:i + self.n])
         x, weights = self.mixer.transform(*images)
         y = weights if self.regression else (weights > 0).float()
-        if self.noise: x = randn_like(*x)
+        if self.noise: x = trunc_norm_like(*x)
         return (*x, y)
 
     def shuffle(self):
@@ -263,7 +263,7 @@ class ScaleDataset(Dataset):
         weights = self._generate_weights()
         new_imgs = [img * w for w in weights]
         y = weights if self.regression else (weights > 0).float()
-        if self.noise: img, *new_imgs = randn_like(img, *new_imgs)
+        if self.noise: img, *new_imgs = trunc_norm_like(img, *new_imgs)
         return (img, *new_imgs, y)
 
     def _generate_weights(self):
@@ -308,7 +308,7 @@ class QuadrantDataset(Dataset):
         img = load_img(self.paths[i], self.shape)
         i = np.random.randint(0, 4)
         x = self.select_quadrant(img, i)
-        if self.noise: x = randn_like(x)
+        if self.noise: x = trunc_norm_like(x)
         return x, i
 
     def select_quadrant(self, img, i):
@@ -438,7 +438,7 @@ def ds_subset(ds, n, random=False, attr='samples'):
     return ds
 
 
-def randn_like(*args):
+def trunc_norm_like(*args, min=0, max=1):
     """Create random noise with the same shape as each input tensor. Use this
     to make a dataset output random noise for testing purposes (this lets us
     see if training on the real dataset looks any different from training on
@@ -453,5 +453,5 @@ def randn_like(*args):
     tuple[torch.tensor]: Tensors with same shapes as the inputs but whose
     values are generated randomly from a normal distribution.
     """
-    return tuple(torch.randn_like(arg) for arg in args)
+    return tuple(torch.randn_like(arg).clamp(min=min, max=max) for arg in args)
 

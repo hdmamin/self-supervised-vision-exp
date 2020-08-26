@@ -160,7 +160,14 @@ Plans: Ideally, try a simple experiment or two (new random noise mode, replace m
 
 8/25/20
 -------
+Progress: Updated random noise function to clip values at 0 and 1 by default (so more like truncated normal - could always pass in -9e9, 9e9 as bounds if we want more of a true normal). Tried training scaleDS regression on random noise and it performed exactly the same (suggests something is very wrong with training). Fixed bug in MPHead (batch norm 1d needs dimension specified and it should be the the 2nd of 3 dimensions, oddly). Tried training scale regression with batch norm and while training is still noisy (maybe LR too high), model finally learns a bit! Granted, it's still only on 1 batch so I don't know if it's learning anything useful, but at least we're making progress. Tried MLPHead with batch norm on mixup classification and sadly, model still predicts a constant. Tried adding init bias trick as well but this also failed. Fixed bug with bias_trick (last_act accepts value None, not 'none'). Cleaned up some outdated code in MLPHead.
+
+Plans: Option 1: write predict method for trainer and/or basemodel (tired of having to manually map everything to the gpu when I'm using that but not when on cpu). Option 2: examine outputs of encoder and classification head to try to identify where the issue is (somewhere activations must be becoming either huge or tiny). Option 3: just try training with different activation function. Also check to make sure I didn't make any unintentional changes between scale classification and mixup classification.
+
+8/26/20
+-------
 Progress: 
 
 Plans: 
+
 

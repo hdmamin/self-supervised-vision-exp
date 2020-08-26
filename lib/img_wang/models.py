@@ -259,6 +259,8 @@ class MLPHead(ClassificationHead):
         ds_n: int
             Number of source images in dataset task (e.g. with the default
             Mixup task, we use 3 source images, 2 of which are mixed together).
+            Even if bias_trick is False, this is necessary to know if we want
+            to use batch norm.
         bias_trick: bool
             If True, this will try to use Karpathy's trick of initializing the
             last layer's bias term to the constant that sigmoid will convert
@@ -277,21 +279,19 @@ class MLPHead(ClassificationHead):
         """
         super().__init__(**act_kwargs)
         if bias_trick:
-            if act_kwargs.pop('last_act', None) not in ('sigmoid', 'none'):
+            if act_kwargs.pop('last_act', -1) not in ('sigmoid', None):
                 raise ValueError('`bias_trick` only available when `last_act` '
                                  'is "sigmoid" or "none".')
             warnings.warn('This implementation of `bias_trick` is only '
                           'intended for classification mode.')
 
         self.n_layers = len(fs)
-        # self.fc = nn.ModuleList([nn.Linear(f_in, f_out)
-        #                          for f_in, f_out in zip((f_in, *fs), fs)])
 
         layers = []
         for i, (f_in, f_out) in enumerate(zip((f_in, *fs), fs), 1):
             layers.append(nn.Linear(f_in, f_out))
             if i < self.n_layers:
-                if batch_norm: layers.append(nn.BatchNorm2d())
+                if batch_norm: layers.append(nn.BatchNorm1d(ds_n, eps=1e-3))
                 layers.append(act)
             elif bias_trick:
                 # No batch norm or activation added in this case so fc is last.
@@ -311,11 +311,6 @@ class MLPHead(ClassificationHead):
         predictions per row.
         """
         x = x_new[:, None, ...] * x_stack
-        # for i, layer in enumerate(self.fc, 1):
-        #     x = layer(x)
-        #     if i < self.n_layers:
-        #         x = self.act(x)
-
         x = self.fc_stack(x)
         return x.squeeze(-1)
 

@@ -132,6 +132,7 @@ Brainstorming possible causes of the failure to learn (for now, I'm talking most
 
 online suggestions:
 -# TODO: train on random noise. See if learning looks any different.
+    [UPDATE: training looks the same. Something is very wrong - hoping batch norm will help.]
 -# TODO: look at histograms of weights. Look out for very large weights and severely non-normal distributions.
 -# TODO: gradient clipping to prevent exploding grads.
 -# TODO: in lieu of LR finder, can try multipling the LR by 10 until I get NaNs. Then try dividing by 10 until I get no learning.
