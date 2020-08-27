@@ -74,7 +74,7 @@ class SmoothLogSoftmax(SmoothSoftmaxBase):
         super().__init__(log=True, temperature=temperature, dim=dim)
 
 
-class Encoder(nn.Module):
+class Encoder(BaseModel):
 
     def __init__(self, n=3, c_in=3, fs=(8, 16, 32, 64, 128, 256),
                  strides=(2, 2, 1, 1, 1, 1), kernel_size=3, norm=True,
@@ -145,7 +145,7 @@ class TorchvisionEncoder(nn.Module):
         return self.model(x)
 
 
-class ClassificationHead(nn.Module, ABC):
+class ClassificationHead(BaseModel, ABC):
     """Abstract class that handles the last activation common to all of our
     classification heads. Subclasses must implement a `_forward` method which
     will be called prior to this activation. This is arguably overkill in terms
@@ -243,10 +243,9 @@ class MLPHead(ClassificationHead):
         fs: Iterable[int]
             Output dimension for each linear layer. The length of this list
             will determine the number of layers. The last value should be 1.
-        act: callable
-            Can be a nn.Module or something from torch.nn.functional. It's
-            called after each linear layer except the last one (that is handled
-            by `last_act` in the parent class).
+        act: nn.Module
+            Can be a nn.Module. It's called after each linear layer except the
+            last one (that is handled by `last_act` in the parent class).
         batch_norm: bool
             If True, add batch norm after each linear layer. Early training
             results without batch norm suggest we may be suffering from
@@ -292,6 +291,9 @@ class MLPHead(ClassificationHead):
             layers.append(nn.Linear(f_in, f_out))
             if i < self.n_layers:
                 if batch_norm: layers.append(nn.BatchNorm1d(ds_n, eps=1e-3))
+                # TODO: maybe when switching to sequential, this line caused
+                # a new problem: same activation obj after each layer. Though
+                # I guess in the default case there's still only 1.
                 layers.append(act)
             elif bias_trick:
                 # No batch norm or activation added in this case so fc is last.

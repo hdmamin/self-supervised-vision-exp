@@ -166,8 +166,15 @@ Plans: Option 1: write predict method for trainer and/or basemodel (tired of hav
 
 8/26/20
 -------
-Progress: 
+Progress: Turns out incendio trainer already has a predict method, but I added one to basemodel and refactored the trainer method a bit (also made classification head inherit from basemodel). Tried training mixup classification with leaky relu and relu in place of mish but it didn't help. (Technically the model doesn't exactly output the bias for everything but the range of predictions is still quite small, e.g. .55-.75, and of course they're all the same class). Removed incendio progress bars at end of each epoch (works in notebooks, at least - bars don't show up at all in lab :/ ) and fixed plotting bug in metrichistory callback. Also removed time from incendio logger printouts (all in all, training history is looking cleaner. Still kind of tempted to make everything a column so we get one nice clean table but I'm torn because I remember very specifically wanting to avoid that because with a lot of metrics that can get very messy). Took another look at scale classification vs. mixup classification and I swear they look the same >:( .
 
-Plans: 
+Plans: Adjust how MLPHead handles `act` to avoid potential issues with multiple layers referencing same object. Return to issue of examing encoder and head outputs to figure out where the activations are blowing up.
+
+8/27/20
+-------
+Progress:
+
+Plans:
+
 
 
