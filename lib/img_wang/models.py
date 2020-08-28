@@ -232,6 +232,7 @@ class MLPHead(ClassificationHead):
 
     @valuecheck
     def __init__(self, f_in, fs=(256, 1), act=Mish(), batch_norm=True,
+                 post_mult_batch_norm=True,
                  ds_n=3, bias_trick=False, **act_kwargs):
         """
         Parameters
@@ -285,7 +286,6 @@ class MLPHead(ClassificationHead):
                           'intended for classification mode.')
 
         self.n_layers = len(fs)
-
         layers = []
         for i, (f_in, f_out) in enumerate(zip((f_in, *fs), fs), 1):
             layers.append(nn.Linear(f_in, f_out))
@@ -300,6 +300,7 @@ class MLPHead(ClassificationHead):
                 # Inverse sigmoid of 1 causes divide by zero error.
                 init_bias_constant_(layers[-1], target_pct=min(2/ds_n, .999))
 
+        if post_mult_batch_norm: self.post_mult_bn = nn.BatchNorm1d(ds_n)
         self.fc_stack = nn.Sequential(*layers)
         self.act = act
 
@@ -313,6 +314,7 @@ class MLPHead(ClassificationHead):
         predictions per row.
         """
         x = x_new[:, None, ...] * x_stack
+        if hasattr(self, 'post_mult_bn'): x = self.post_mult_bn(x)
         x = self.fc_stack(x)
         return x.squeeze(-1)
 

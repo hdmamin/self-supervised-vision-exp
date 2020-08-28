@@ -172,9 +172,13 @@ Plans: Adjust how MLPHead handles `act` to avoid potential issues with multiple 
 
 8/27/20
 -------
-Progress:
+Progress: Decidwed MLP handling of `act` is fine (no weights anyway so same obj can be reused). Examined activation magnitude and sign after each layer and identified a couple possible issues (concat pool -> element-wise mult causes huge activations; future layers bring them back to normal but grads may have gotten screwed up in the process). Tried adding bn after mult but no difference. Tried removing bn after each fc layer but keeping it after mult but no difference.
 
-Plans:
+Plans: Continue investigating activations by layer. Maybe try training with bigger Head. Maybe look into torch's default activation schemes for each layer and see if we can find something better. Need to refresh my memory on how relu/leaky relu doesn't always cause this problem - seems like chopping off negativs makes it inevitable.
 
+8/28/20
+-------
+Progress: 
 
+Plans: 
 
