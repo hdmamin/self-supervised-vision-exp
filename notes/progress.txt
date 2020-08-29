@@ -172,13 +172,21 @@ Plans: Adjust how MLPHead handles `act` to avoid potential issues with multiple 
 
 8/27/20
 -------
-Progress: Decidwed MLP handling of `act` is fine (no weights anyway so same obj can be reused). Examined activation magnitude and sign after each layer and identified a couple possible issues (concat pool -> element-wise mult causes huge activations; future layers bring them back to normal but grads may have gotten screwed up in the process). Tried adding bn after mult but no difference. Tried removing bn after each fc layer but keeping it after mult but no difference.
+Progress: Decided MLP handling of `act` is fine (no weights anyway so same obj can be reused). Examined activation magnitude and sign after each layer and identified a couple possible issues (concat pool -> element-wise mult causes huge activations; future layers bring them back to normal but grads may have gotten screwed up in the process). Tried adding bn after mult but no difference. Tried removing bn after each fc layer but keeping it after mult but no difference.
 
 Plans: Continue investigating activations by layer. Maybe try training with bigger Head. Maybe look into torch's default activation schemes for each layer and see if we can find something better. Need to refresh my memory on how relu/leaky relu doesn't always cause this problem - seems like chopping off negativs makes it inevitable.
 
 8/28/20
 -------
-Progress: 
+Progress: Read up a bit on initialization schemes (torch already uses a kaiming init variant, seems reasonable enough). Fixed an incendio import bug and cleaned up some old commented out code. Tried recently updated MLPHead on mixup regression task (same result as classification). First stab at gradient logging by subclassing CometCallback.
 
-Plans: 
+Plans: Examine results of comet gradient logging more thoroughly. Update callback to store results in a more useful way instead of littering the metrics page with a separate graph for each layer.
+
+8/29/20
+-------
+Progress:
+
+Plans:
+
+
 
