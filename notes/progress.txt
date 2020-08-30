@@ -184,9 +184,13 @@ Plans: Examine results of comet gradient logging more thoroughly. Update callbac
 
 8/29/20
 -------
-Progress:
+Progress: Examined comet gradient logging and switched up functionality: store grad means and stds, then plot and store bar chart at end of training. Found that last layer and some earlier batch norm layers are the only ones with grads that aren't near-zero. Also experimented with scatter plots of grad stats by mini batch but this made it hard to get a quick intuition for how early layer grads compare to late layer grads. Tried much shallower network and the same thing happens. Wondering if this is vanishing grad or if there's some bug causing us to lose grads in the middle of the network.
 
-Plans:
+Plans: Investigate for causes of vanishing grad. Maybe try replacing element-wise mult with cosine similarity. Maybe rename and port CometCallbackWithGrads.
 
+8/30/20
+-------
+Progress: 
 
+Plans: 
 

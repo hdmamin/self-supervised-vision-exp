@@ -12,7 +12,7 @@ class PairwiseLossReduction(nn.Module):
     """
 
     @valuecheck
-    def __init__(self, reduce: ('sum', 'mean', 'none') = 'mean', **kwargs):
+    def __init__(self, reduce:('sum', 'mean', 'none')='mean', **kwargs):
         super().__init__()
         self.distance = nn.PairwiseDistance(**kwargs)
         self.reduce = identity if reduce == 'none' else getattr(torch, reduce)
