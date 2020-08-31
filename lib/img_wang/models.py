@@ -3,6 +3,7 @@ from fastai2.layers import PoolFlatten
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torchvision import models as tvm
 import warnings
 
@@ -117,6 +118,24 @@ class Encoder(BaseModel):
         return x
 
 
+class StackedEncoder(Encoder):
+    """Same as Encoder but it only needs to be called once. Troubleshooting
+    Encoder and want to rule out the multiple calls as the culprit causing
+    near zero gradients.
+
+    Looks like this would require some changes to Unmixer interface to be
+    usable. May require custom PoolFlatten3d?
+    """
+
+    def forward(self, *xb):
+        bs = xb[0].shape[0]
+        # Stack along batch dimension so all images can be processed at once.
+        xb = torch.cat(xb, dim=0)                    # (bs*(n+1), c, h, w)
+        xb = self.conv(xb)                           # (bs*(n+1), f[-1], h, w)
+        if hasattr(self, 'res'): xb = self.res(xb)   # No change in dims.
+        return xb.view(bs, -1, *xb.shape[-3:])       # (bs, n+1, emb_dim, h, w)
+
+
 class TorchvisionEncoder(nn.Module):
     """Create an encoder from a standard architecture provided by Torchvision.
     By default, pretrained weights will be used but that can be overridden in
@@ -210,6 +229,12 @@ class ClassificationHead(BaseModel, ABC):
         except for the final activation.
         """
         raise NotImplementedError
+
+    def __bool__(self):
+        """Maybe eventually add this to BaseModel. Was running into surprising
+        behavior where subclassed instances truthiness was not consistent.
+        """
+        return True
 
 
 class DotProductHead(ClassificationHead):
@@ -313,7 +338,7 @@ class MLPHead(ClassificationHead):
         has 1 output node: this is squeezed out so we have one tensor of
         predictions per row.
         """
-        x = x_new[:, None, ...] * x_stack
+        x = x_new[:, None, :] * x_stack
         if hasattr(self, 'post_mult_bn'): x = self.post_mult_bn(x)
         x = self.fc_stack(x)
         return x.squeeze(-1)
@@ -328,7 +353,8 @@ class SimilarityHead(ClassificationHead):
     difficult in Incendio.
     """
 
-    def __init__(self, similarity=None, temperature='auto'):
+    def __init__(self, similarity=None, last_act='log_softmax',
+                 temperature='auto'):
         """
         Parameters
         ----------
@@ -341,12 +367,18 @@ class SimilarityHead(ClassificationHead):
             the feature dimension of x. You can also manually specify a float.
             I'm not sure what a good value would be for this.
         """
-        super().__init__(last_act='log_softmax', temperature=temperature)
+        super().__init__(last_act=last_act, temperature=temperature)
+        if last_act == 'log_softmax':
+            warnings.warn('Remember to use nn.NLLLoss when using contrastive '
+                          'loss.')
+        else:
+            warnings.warn('If you\'re using contrastive loss, last activation '
+                          'in SimilarityHead should be log_softmax.')
+
         self.similarity = similarity or nn.CosineSimilarity(dim=-1)
-        warnings.warn('Remember to use nn.NLLLoss when using SimilarityHead.')
 
     def _forward(self, x_new, x_stack):
-        return self.similarity(x_new[:, None, ...], x_stack)
+        return self.similarity(x_new[:, None, :], x_stack)
 
 
 class Unmixer(BaseModel):

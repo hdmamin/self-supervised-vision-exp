@@ -190,7 +190,7 @@ Plans: Investigate for causes of vanishing grad. Maybe try replacing element-wis
 
 8/30/20
 -------
-Progress: 
+Progress: Adapted SimilarityHead to work in cases not using contrastive loss and tried swapping it in for MLPHead, but mixup regression still failed to learn. Tried this on classification task too but still nothing. Occurred to me that calling encoder multiple times before backward pass could plausibly be messing up computation graph so returned to my first implementation which reshapes the batch to process everything at once. Worked a bit on this but realized it causes some problems with the Unmixer interface and PoolFlatten (outputs rank 5 tensor which isn't compatible with adaptiveavg2d). Ran scale classification task again with gradient tracking to compare what's happening in the working task to the non-working task.
 
-Plans: 
+Plans: Examine grads on scale classification and repeat the process on scale regression. Try to identify where in the process things are breaking down for mixup ds. Maybe look more into what is considered "too small" for gradients": even on scale classification task, most grads are pretty near zero, especially for encoder. (Put batch reshaping encoder on hold - regular encoder worked on simpler tasks so I'm not convinced that's the problem and it looks like it will take some time to make the interfaces compatible.) 
 
