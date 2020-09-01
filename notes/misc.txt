@@ -157,3 +157,6 @@ Thoughts: Kind of seems like it's not a matter of the network being incapable of
 -another idea: maybe calling encoder multiple times is screwing up the computation graph? Vaguely recall some kind of retain_graph or retain_gradients function/property/kwarg of some kind, can look into that. Or try rebuilding implementation that reshapes batch and calls encoder only once.
 -consider: is there a way to train and evaluate encoder separately from classification head (maybe VAE)? Want to narrow down where the problem is.
 
+8/31/20
+-------
+-realization: probably not ideal to use cosine similarity outputs directly as logits. Should have some kind of layer(s) to map from cosine sim to logits. However, is this compatible with standard FC layer? Each value already corresponds to a different pair of images so we may need to make sure we don't mix weights that shouldn't be mixed. Technically, scores in the same row are not independent though: due to how we set up the task, one weight being higher leaves less "available" weight for the other images.

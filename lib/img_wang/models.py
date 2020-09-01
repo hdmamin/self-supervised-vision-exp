@@ -257,8 +257,8 @@ class MLPHead(ClassificationHead):
 
     @valuecheck
     def __init__(self, f_in, fs=(256, 1), act=Mish(), batch_norm=True,
-                 post_mult_batch_norm=True,
-                 ds_n=3, bias_trick=False, **act_kwargs):
+                 post_mult_batch_norm=True, ds_n=3, bias_trick=False,
+                 **act_kwargs):
         """
         Parameters
         ----------
@@ -310,6 +310,14 @@ class MLPHead(ClassificationHead):
             warnings.warn('This implementation of `bias_trick` is only '
                           'intended for classification mode.')
 
+        # Using cosine similarity here produces a different shape
+        # (reduces feature dimension to 1) which affects the shapes of the
+        # linear layers that follow. I think this is sufficiently different to
+        # call for a different Head implementation. Originally built
+        # ElementwiseMult for the purpose of making it easier to swap between
+        # that and CosineSimilarity. It's no longer a necessary abstraction
+        # but I'll leave it # for now.
+        self.mult = ElementwiseMult()
         self.n_layers = len(fs)
         layers = []
         for i, (f_in, f_out) in enumerate(zip((f_in, *fs), fs), 1):
@@ -338,7 +346,7 @@ class MLPHead(ClassificationHead):
         has 1 output node: this is squeezed out so we have one tensor of
         predictions per row.
         """
-        x = x_new[:, None, :] * x_stack
+        x = self.mult(x_new[:, None, :], x_stack)
         if hasattr(self, 'post_mult_bn'): x = self.post_mult_bn(x)
         x = self.fc_stack(x)
         return x.squeeze(-1)
@@ -354,7 +362,7 @@ class SimilarityHead(ClassificationHead):
     """
 
     def __init__(self, similarity=None, last_act='log_softmax',
-                 temperature='auto'):
+                 temperature='auto', mlp_in=None):
         """
         Parameters
         ----------
@@ -376,9 +384,16 @@ class SimilarityHead(ClassificationHead):
                           'in SimilarityHead should be log_softmax.')
 
         self.similarity = similarity or nn.CosineSimilarity(dim=-1)
+        if mlp_in:
+            self.mlp = nn.Linear(mlp_in, mlp_in)
+            warnings.warn('SimilarityHead has small MLP after the similarity '
+                          'computation. Your use case should NOT involve '
+                          'contrastive loss.')
 
     def _forward(self, x_new, x_stack):
-        return self.similarity(x_new[:, None, :], x_stack)
+        x = self.similarity(x_new[:, None, :], x_stack)
+        if hasattr(self, 'mlp'): x = self.mlp(x)
+        return x
 
 
 class Unmixer(BaseModel):
@@ -463,4 +478,13 @@ class SupervisedEncoderClassifier(nn.Module):
         x = self.enc(x)
         x = self.pool(x)
         return self.fc(x).squeeze()
+
+
+class ElementwiseMult(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x1, x2):
+        return x1 * x2
 

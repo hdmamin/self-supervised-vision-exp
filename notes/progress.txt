@@ -194,3 +194,15 @@ Progress: Adapted SimilarityHead to work in cases not using contrastive loss and
 
 Plans: Examine grads on scale classification and repeat the process on scale regression. Try to identify where in the process things are breaking down for mixup ds. Maybe look more into what is considered "too small" for gradients": even on scale classification task, most grads are pretty near zero, especially for encoder. (Put batch reshaping encoder on hold - regular encoder worked on simpler tasks so I'm not convinced that's the problem and it looks like it will take some time to make the interfaces compatible.) 
 
+
+8/31/20
+-------
+Progress: Experimented a little with options for ways to map cosine similarity scores to logits. Ultimately settled on regular FC layer in similarityhead (originally tried MLP head but realized that is really meant for acting on feature vectors while cosine similarity outputs scalars). Built elementwiseMult layer for two input tensors (a bit silly but it was initially to allow us to easily swap between that and cosine similarity before I realized the dimensions differ).
+
+Plans: Return to task of examining grads on scale classification and repeat process on scale regression. Could investigate these further or try new similarityhead implementation.
+
+9/1/20
+-------
+Progress:
+
+Plans: 
