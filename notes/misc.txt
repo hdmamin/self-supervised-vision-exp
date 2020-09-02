@@ -160,3 +160,20 @@ Thoughts: Kind of seems like it's not a matter of the network being incapable of
 8/31/20
 -------
 -realization: probably not ideal to use cosine similarity outputs directly as logits. Should have some kind of layer(s) to map from cosine sim to logits. However, is this compatible with standard FC layer? Each value already corresponds to a different pair of images so we may need to make sure we don't mix weights that shouldn't be mixed. Technically, scores in the same row are not independent though: due to how we set up the task, one weight being higher leaves less "available" weight for the other images.
+
+9/1/20
+------
+-ideas from talk with Mike: 
+    -try swapping in pre-trained encoder again to rule out model as a problem. 
+    -Try log loss (have to think about how this would work. Very similar to contrastive loss I think.). 
+    -Train encoder separately first (VAE? or Mike’s suggestion to forego mixup at first and just have the one target image and 3 source images, where 1 of those sources is identical to the target). [UPDATE: don't think this is useful. Batch norm aside, model is mostly deterministic as an encoder. But that actually could be useful in a way: if my logic in ClassificationHead is okay, this should be a spectacularly easy task. If it can't learn that two identical encodings are similar, then what are we even doing here?]
+    -See if we can simplify this to a binary classification task to use built in loss and rule that out as an error source.
+
+-even on scale classification which learns very well, grads are very close to zero. Not sure if this means that's a normal magnitude or if the task is just so easy that it doesn't matter, but the mixup task is hard enough to need a normally functioning net.
+-looked online and grad magnitudes <.05 (and even under .005) seems normal, though some people got a few grads in the 2-10 range as well.
+-looked at grads for scale regression random noise and they look very similar to the real dataset, even though that appeared to work :0 . May need to train on larger scale dataset to make sure it can actually learn (i.e. look at val stats, not just ability to overfit train set).
+-looked at grads for mixup classification again and they're actually pretty big. Not sure what to make of this. Tried smaller LR but this didn't help.
+-tried pre-trained mobilenet on mixup classification. First run showed a little more variance in outputs but still not learning anything useful. Second run showed similarly low variance outputs to what we've been seeing.
+
+-starting to wonder again if the encoder implementation may be a problem: we only call backward once per forward pass. But weights don't change between backward calls. Still seems worth reworking the batch-reshaping encoder and seeing if the problem disappears. 
+

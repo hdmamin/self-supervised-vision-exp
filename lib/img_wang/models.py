@@ -142,7 +142,7 @@ class TorchvisionEncoder(nn.Module):
     the constructor.
     """
 
-    def __init__(self, arch='mobilenet_v2', **kwargs):
+    def __init__(self, arch='mobilenet_v2', pretrained=True, **kwargs):
         """Create an encoder from a pretrained torchvision model.
 
         Parameters
@@ -154,7 +154,7 @@ class TorchvisionEncoder(nn.Module):
             Addition kwargs will be forwarded to the model constructor.
         """
         super().__init__()
-        model = getattr(tvm, arch)(pretrained=True, **kwargs)
+        model = getattr(tvm, arch)(pretrained=pretrained, **kwargs)
         self.model = dict(model.named_children())['features']
 
     def forward(self, x):

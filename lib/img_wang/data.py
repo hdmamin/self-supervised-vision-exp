@@ -111,7 +111,7 @@ class MixupDataset(Dataset):
     """
 
     def __init__(self, dir_=None, paths=(), shape=(128, 128), n=3,
-                 regression=True, noise=False, **kwargs):
+                 regression=True, noise=False, debug_dup=False, **kwargs):
         """Classification mode usually uses something like
         F.binary_cross_entropy_with_logits loss. Regression mode usually
         uses something like PairwiseLossReduction (basically MSE on a vector
@@ -158,6 +158,7 @@ class MixupDataset(Dataset):
         self.load_img = partial(load_img, shape=shape)
         self.regression = regression
         self.noise = noise
+        self.debug_dup = debug_dup
 
     def __len__(self):
         """Each mini batch uses n items so the last (n-1) paths do not have
@@ -189,7 +190,10 @@ class MixupDataset(Dataset):
         images = map(self.load_img, self.paths[i:i + self.n])
         x, weights = self.mixer.transform(*images)
         y = weights if self.regression else (weights > 0).float()
-        if self.noise: x = trunc_norm_like(*x)
+        if self.noise:
+            x = trunc_norm_like(*x)
+        elif self.debug_dup:
+            x, y = duplicate_composite_image(y, *x)
         return (*x, y)
 
     def shuffle(self):
@@ -454,4 +458,12 @@ def trunc_norm_like(*args, min=0, max=1):
     values are generated randomly from a normal distribution.
     """
     return tuple(torch.randn_like(arg).clamp(min=min, max=max) for arg in args)
+
+
+def duplicate_composite_image(y, *img_srcs):
+    img_srcs = list(img_srcs)
+    zero_idx = np.random.choice(np.where(y == 0)[0])
+    y[zero_idx] = 1
+    img_srcs[zero_idx + 1] = img_srcs[0]
+    return img_srcs, y
 

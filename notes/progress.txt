@@ -203,6 +203,12 @@ Plans: Return to task of examining grads on scale classification and repeat proc
 
 9/1/20
 -------
-Progress:
+Progress: Tried tracking grads for 3 of 4 task variants again and found that oddly, grads are BIGGER on mixup classification, which doesn't work, thanon scale classification which does work. Worryingly, grads for scale classification with random noise looks very similar to grads for the real task. Tried pretrained mobilenet on mixup classification task and it also failed to learn anything. Gradient flow looks pretty good here though (looked online and looks like magnitude <.05 is normal). Started building trivial variation to test if MLPHead logic works at all: replace one of the zerod out source images with the new mixed image and a label of 1. Encodings should be identical (I think) so surely this will be easy to learn unless something is seriously broken.
+
+Plans: May need to revise trivial dataset variation a little (see today's progress. Might want to rename attr. Note: consider what type of problem/loss I want to use this with. Maybe try to keep same as real task for consistency. Can always test another binary variant separately - don't change too many variables at once.) Hopefully get this working and try training on a tiny subset.
+
+9/2/20
+-------
+Progress: 
 
 Plans: 
