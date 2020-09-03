@@ -209,6 +209,14 @@ Plans: May need to revise trivial dataset variation a little (see today's progre
 
 9/2/20
 -------
-Progress: 
+Progress: Reworked the duplication function to allow us to duplicate the mixed image or a source image. Updated dataset interface to have a single debug_mode param. Wrote rand_choice func (torch equivalent of np.random.choice with limited functionality). Tested that each debug_mode seems to produce what I have in mind and tried training in classification mode in source image duplicate mode. Model still fails to learn - frustrating but I suppose this means I'm slowly narrowing in on the bug. If it can't do the task on images that are literally identical, something is broken.
 
-Plans: 
+Plans: Investigate further: see if encoder is at least outputting the same vector for the same inputs. Try debug node where we duplicate the mixup image, though I'm pretty sure that won't work if the source duplicate mode doesn't.
+
+9/3/20
+------
+Progress:
+
+Plans:
+
+

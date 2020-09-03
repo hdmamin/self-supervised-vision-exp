@@ -9,6 +9,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 from htools import Args, valuecheck
+from img_wang.utils import rand_choice
 
 
 class ImageMixer:
@@ -110,8 +111,11 @@ class MixupDataset(Dataset):
     the linear combination.
     """
 
+    @valuecheck
     def __init__(self, dir_=None, paths=(), shape=(128, 128), n=3,
-                 regression=True, noise=False, debug_dup=False, **kwargs):
+                 regression=True,
+                 debug_mode:(None, 'noise', 'dup_mix', 'dup_src')=None,
+                 **kwargs):
         """Classification mode usually uses something like
         F.binary_cross_entropy_with_logits loss. Regression mode usually
         uses something like PairwiseLossReduction (basically MSE on a vector
@@ -139,10 +143,24 @@ class MixupDataset(Dataset):
             is a 1-hot-encoded vector where 1 means a source image had a
             nonzero weight when constructing the new image and 0 means it
             didn't).
-        noise: bool
-            If True, each image tensor will be replaced with random noise.
-            This can be useful when trying to diagnose whether a model is
-            learning anything at all.
+        debug_mode: None or str
+            This lets us select 1 of several trivial tasks to debug our
+            network, dataset, training loop, etc. Available options are:
+
+            - 'noise': replace each image tensor with random noise. Labels are
+            unaffected.
+            - 'dup_mix': Duplicate the composite image, replacing one of the
+            zerod-out source images.
+            - 'dup_src': Duplicate a source image, replacing the composite
+            image.
+
+            For both dup cases, labels will be ones and zeros where only the
+            duplicated image is positive. While technically this is now
+            multi-class rather than multi-label, we should be able to use the
+            same loss - think of it as multi-label where it just so happens
+            that there's only 1 label per row. Technically this should also
+            work for the regression case. Want this to be as easy to swap in
+            for the real task as possible.
         kwargs: any
             Additional kwargs are passed to ImageMixer. These are typically
             either `a` and `b` (parameters for the default sampling
@@ -157,8 +175,16 @@ class MixupDataset(Dataset):
         self.mixer = ImageMixer(n=3, **kwargs)
         self.load_img = partial(load_img, shape=shape)
         self.regression = regression
-        self.noise = noise
-        self.debug_dup = debug_dup
+
+        self.debug_mode = debug_mode
+        if not debug_mode:
+            self.transform_func = identity_wrapper
+        elif debug_mode == 'noise':
+            self.transform_func = trunc_norm_like_wrapper
+        elif debug_mode == 'dup_mix':
+            self.transform_func = partial(duplicate_image, composite=True)
+        elif debug_mode == 'dup_src':
+            self.transform_func = partial(duplicate_image, composite=False)
 
     def __len__(self):
         """Each mini batch uses n items so the last (n-1) paths do not have
@@ -190,10 +216,7 @@ class MixupDataset(Dataset):
         images = map(self.load_img, self.paths[i:i + self.n])
         x, weights = self.mixer.transform(*images)
         y = weights if self.regression else (weights > 0).float()
-        if self.noise:
-            x = trunc_norm_like(*x)
-        elif self.debug_dup:
-            x, y = duplicate_composite_image(y, *x)
+        x, y = self.transform_func(y, *x)
         return (*x, y)
 
     def shuffle(self):
@@ -460,10 +483,48 @@ def trunc_norm_like(*args, min=0, max=1):
     return tuple(torch.randn_like(arg).clamp(min=min, max=max) for arg in args)
 
 
-def duplicate_composite_image(y, *img_srcs):
-    img_srcs = list(img_srcs)
-    zero_idx = np.random.choice(np.where(y == 0)[0])
-    y[zero_idx] = 1
-    img_srcs[zero_idx + 1] = img_srcs[0]
+def trunc_norm_like_wrapper(y, *img_srcs):
+    return trunc_norm_like(*img_srcs), y
+
+
+def duplicate_image(y, *img_srcs, composite=True):
+    """Replace one of the images with a duplicate image. In other words, for
+    a mixup task with n=3 source images (4 total images), 2 of those 4 images
+    will be identical. You can choose to replace one of the zero-weighted
+    source images with the composite OR replace the composite with one of the
+    source images. The duplicate will have a label of 1 while the others will
+    have a label of zero.
+
+    Parameters
+    ----------
+    y: torch.tensor
+        Rank 1 with dimension dataset.n (recall 3 is default).
+    *img_srcs: torch.tensors
+        Image tensors where the first is the composite image.
+    composite: bool
+        If True, duplicate the composite image. If False, duplicate one of the
+        source images, replacing the composite image.
+
+    Returns
+    -------
+    tuple[torch.tensor]: First item is tuple of image tensors, second is tensor
+    of labels. Same shapes as inputs.
+    """
+    img_srcs, y = list(img_srcs), torch.zeros_like(y)
+    if composite:
+        y_change_idx = rand_choice(torch.where(y == 0)[0])
+        x_change_idx = y_change_idx + 1
+        x_src_idx = 0
+    else:
+        y_change_idx = torch.randint(y.shape[0], size=(1,))
+        x_change_idx = 0
+        x_src_idx = y_change_idx + 1
+    y[y_change_idx] = 1
+    img_srcs[x_change_idx] = img_srcs[x_src_idx]
     return img_srcs, y
+
+
+def identity_wrapper(y, *img_srcs):
+    return img_srcs, y
+
 
