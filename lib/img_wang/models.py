@@ -136,7 +136,7 @@ class StackedEncoder(Encoder):
         return xb.view(bs, -1, *xb.shape[-3:])       # (bs, n+1, emb_dim, h, w)
 
 
-class TorchvisionEncoder(nn.Module):
+class TorchvisionEncoder(BaseModel):
     """Create an encoder from a standard architecture provided by Torchvision.
     By default, pretrained weights will be used but that can be overridden in
     the constructor.
@@ -361,8 +361,10 @@ class SimilarityHead(ClassificationHead):
     difficult in Incendio.
     """
 
+    # def __init__(self, similarity=None, last_act='log_softmax',
+    #              temperature='auto', mlp_in=None):
     def __init__(self, similarity=None, last_act='log_softmax',
-                 temperature='auto', mlp_in=None):
+                 temperature='auto', fs=(64, 16, 3)):
         """
         Parameters
         ----------
@@ -384,8 +386,14 @@ class SimilarityHead(ClassificationHead):
                           'in SimilarityHead should be log_softmax.')
 
         self.similarity = similarity or nn.CosineSimilarity(dim=-1)
-        if mlp_in:
-            self.mlp = nn.Linear(mlp_in, mlp_in)
+        # if mlp_in:
+        #     self.mlp = nn.Linear(mlp_in, mlp_in)
+        #     warnings.warn('SimilarityHead has small MLP after the similarity '
+        #                   'computation. Your use case should NOT involve '
+        #                   'contrastive loss.')
+        if fs:
+            self.mlp = nn.Sequential(*[nn.Linear(f_in, f_out) for f_in, f_out
+                                       in zip([fs[-1]]+list(fs), fs)])
             warnings.warn('SimilarityHead has small MLP after the similarity '
                           'computation. Your use case should NOT involve '
                           'contrastive loss.')

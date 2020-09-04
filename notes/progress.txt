@@ -215,8 +215,13 @@ Plans: Investigate further: see if encoder is at least outputting the same vecto
 
 9/3/20
 ------
-Progress:
+Progress: Examined encoder outputs (see notes from misc.txt). Tried using a pretrained encoder and freezing it while training just the head. I think one of these experiments showed a little promise (at least a slightly wider range of probabilities and the positive pair was the highest) but don't think I ever got it to fully work. Tried larger MLPHead since I noticed it was dwarfed by the mobilenet encoder but it didn't help. Tried adding a FC stack to similarity head (cosine similarity seems more reliable than ElementwiseMult) but that did terribly (some variation in probas but the highest pred was not the true pair).
 
-Plans:
+Plans: Continue experimenting with this duplicate task and pretrained model. I think I'm getting closer: the cosine similarity values alone seem like they should be enough to make predictions. Surely the model can learn to predict positives for largest cosine similarity  (especially since it always equals 1).
 
+9/4/20
+------
+Progress: 
+
+Plans: 
 

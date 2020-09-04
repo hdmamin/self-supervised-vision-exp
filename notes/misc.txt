@@ -177,3 +177,15 @@ Thoughts: Kind of seems like it's not a matter of the network being incapable of
 
 -starting to wonder again if the encoder implementation may be a problem: we only call backward once per forward pass. But weights don't change between backward calls. Still seems worth reworking the batch-reshaping encoder and seeing if the problem disappears. 
 
+9/3/20
+------
+Observations
+
+-encoder does output the same vector for identical image inputs (as expected)
+-all latent vectors are pretty similar in the 1 example I checked. 2 possible explanations:
+    -These are all dogs. Maybe if we threw in a goose, it would be more different.
+    -Maybe the problem is that I've been training everything at once. Could train encoder alone first, but now that I think about it, that's basically what using the pretrained encoder does. So the key problem may not be that the encoder is bad. Maybe the encoder weights make up such a big proportion of the network that the head has trouble learning. Could try loading pretrained encoder, freezing it, and training just the head.
+    -Bigger MLPHead?
+-As expected, cosine similarity is highest for the identical image pairs, but the difference isn't as big as I'd have expected. Again, this could be because they're all dogs.
+    -Not clear to me how effective the ElementwiseMult is as a similarity measure between two vectors. Seems like it should be fine (we're holding 1 tensor constant so differences are all due to the second tensor). Or is that the problem? Could try L1 or L2 distance. That could be with a reduction to get a scalar like cosine similarity, or without a reduction to get a tensor like ElementwiseMult.
+
