@@ -336,7 +336,7 @@ class QuadrantDataset(Dataset):
         i = np.random.randint(0, 4)
         x = self.select_quadrant(img, i)
         if self.noise: x = trunc_norm_like(x)
-        return x, i
+        return x, torch.tensor(i)
 
     def select_quadrant(self, img, i):
         """

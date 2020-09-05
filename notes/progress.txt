@@ -221,6 +221,12 @@ Plans: Continue experimenting with this duplicate task and pretrained model. I t
 
 9/4/20
 ------
+Progress: Tried a few more training runs to no avail. Decided to switch focus to single image input tasks for now - if we can get that working, maybe the multi-image input task will be doable. Tried a few training runs on tiny quadrant dataset. No longer have issue of predicting constant but still failed to overfit batch so far. Huge fluctuations make me think LR is too high.
+
+Plans: Continue trying to get quadrant dataset to work. Consider other 1 image input tasks to try.
+
+9/5/20
+------
 Progress: 
 
 Plans: 
