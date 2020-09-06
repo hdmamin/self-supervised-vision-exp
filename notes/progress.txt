@@ -227,7 +227,14 @@ Plans: Continue trying to get quadrant dataset to work. Consider other 1 image i
 
 9/5/20
 ------
-Progress: 
+Progress: Built dataset for single image input binary classification task: patchwork dataset. Decided to pivot here: instead of endlessly banging my head against the wall trying to get the multi-image input tasks to work, I think I need to get a win first and find a simple task that works. Then maybe I can build my way back up to MixupDS eventually, but for now it's not my focus. I'm not giving up on it, I just realized the best way to progress on it in the long term is to use my time effectively to get better at self-supervised learning and I was kind of at a dead end with that. And I decided that if I'm going to switch my focus in the short term, I might as well pick something interesting, and quadrant DS just didn't quite do it for me. Also, it's still multiclass classification (a little more complex than binary) and the task could be kind of hard. Patchwork DS is more visually interesting but maybe (I would guess) a little easier to learn on.
 
-Plans: 
+Plans: Assess whether any of my existing model functionality is usable for the new task or if I need to start from scratch. Either way, start building a model or wrapper to make existing stuff work.
+
+9/6/20
+------
+Progress:
+
+Plans:
+
 
