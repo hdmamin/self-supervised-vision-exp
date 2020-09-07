@@ -216,7 +216,7 @@ class MixupDataset(Dataset):
         images = map(self.load_img, self.paths[i:i + self.n])
         x, weights = self.mixer.transform(*images)
         y = weights if self.regression else (weights > 0).float()
-        x, y = self.transform_func(y, *x)
+        x, y = self.transform_func(x, y)
         return (*x, y)
 
     def shuffle(self):
@@ -363,8 +363,26 @@ class PatchworkDataset(Dataset):
     start with though, since that bogged me down on the Mixup task.
     """
 
+    @valuecheck
     def __init__(self, dir_=None, paths=(), shape=(128, 128), n=3,
-                 patch_shape=(48, 48)):
+                 patch_shape=(48, 48), pct_pos=0.5,
+                 debug_mode:(None, 'fixed')=None, fixed_offset=16):
+        """
+
+        Parameters
+        ----------
+        dir_
+        paths
+        shape
+        n
+        patch_shape
+        pct_pos
+        debug_mode: str or None
+            If not None, specifies an easier mode to use for debugging
+            purposes. 'fixed' ensures that the patch (both source and target)
+            will be in the far upper left corner (i.e. a fixed position). This
+            lets us remove randomness for troubleshooting on tiny subsets.
+        """
         if not dir_ and not paths:
             raise ValueError('One of dir_ or paths should be non-null.')
 
@@ -375,6 +393,11 @@ class PatchworkDataset(Dataset):
         self.patch_h, self.patch_w = patch_shape
         self.max_top = shape[0] - self.patch_h
         self.max_left = shape[1] - self.patch_w
+        self.pct_pos = pct_pos
+        self.debug_mode = debug_mode
+        self.transform_func = identity_wrapper if debug_mode is None \
+            else self._update_xy_fixed
+        self.fixed_offset = fixed_offset
 
     def __len__(self):
         return len(self.paths)
@@ -385,7 +408,7 @@ class PatchworkDataset(Dataset):
         """
         img = self.load_img(self.paths[i])
         src_coords = self.sample_coords()
-        if np.random.uniform() > 0.5:
+        if np.random.uniform() <= self.pct_pos:
             img2 = img.clone().detach()
             targ_coords = self.sample_coords()
             y = 1
@@ -396,16 +419,31 @@ class PatchworkDataset(Dataset):
             img2 = self.load_img(self.paths[i2])
             targ_coords = src_coords
             y = 0
+        img, targ_coords, img_src, coords_src = self.transform_func(
+            img, targ_coords, img2, src_coords
+        )
 
         img[targ_coords] = img2[src_coords]
         return img, torch.tensor([y], dtype=torch.float)
 
     def sample_coords(self):
-        left_x = np.random.randint(0, self.max_left)
-        top_y = np.random.randint(0, self.max_top)
+        if self.debug_mode == 'fixed':
+            left_x, top_y = 0, 0
+        else:
+            left_x = np.random.randint(0, self.max_left)
+            top_y = np.random.randint(0, self.max_top)
         return (slice(None),
                 slice(top_y, top_y + self.patch_h),
                 slice(left_x, left_x + self.patch_w))
+
+    def _update_xy_fixed(self, img_targ, coords_targ, img_src, coords_src):
+        top_y = coords_src[1].start + self.fixed_offset
+        left_x = coords_src[2].start + self.fixed_offset
+        coords_targ = (slice(None),
+                       slice(top_y, top_y + self.patch_h),
+                       slice(left_x, left_x + self.patch_w))
+        return img_targ, coords_targ, img_src, coords_src
+
 
 
 @valuecheck
@@ -538,11 +576,11 @@ def trunc_norm_like(*args, min=0, max=1):
     return tuple(torch.randn_like(arg).clamp(min=min, max=max) for arg in args)
 
 
-def trunc_norm_like_wrapper(y, *img_srcs):
+def trunc_norm_like_wrapper(img_srcs, y):
     return trunc_norm_like(*img_srcs), y
 
 
-def duplicate_image(y, *img_srcs, composite=True):
+def duplicate_image(img_srcs, y, composite=True):
     """Replace one of the images with a duplicate image. In other words, for
     a mixup task with n=3 source images (4 total images), 2 of those 4 images
     will be identical. You can choose to replace one of the zero-weighted
@@ -579,7 +617,7 @@ def duplicate_image(y, *img_srcs, composite=True):
     return img_srcs, y
 
 
-def identity_wrapper(y, *img_srcs):
-    return img_srcs, y
+def identity_wrapper(*args):
+    return args
 
 
