@@ -233,8 +233,14 @@ Plans: Assess whether any of my existing model functionality is usable for the n
 
 9/6/20
 ------
-Progress:
+Progress: Built new model wrapper (equivalent of Unmixer but for single input binary classifier). Fixed a couple small bugs in Patchwork Dataset (still not 100% sure the cloning issue is fixed - keep an eye on that). Ported comet callback. Trained a bit with old Encoder and one layer linear head, then with torchvision encoder, then with frozen torchvision encoder. Some all of these still fail to learn. Though LR was too high, causing wild fluctuations during training, but model still fails to learn after dividing LR by 300.
 
-Plans:
+Plans: Investigate what is going wrong - starting to wonder again if this is an incendio problem. With a frozen pre-trained encoder, all we're doing is training 1 big linear layer. How could this possibly have so much trouble overfitting on a single batch?
+
+9/7/20
+------
+Progress: 
+
+Plans: 
 
 

@@ -361,8 +361,6 @@ class SimilarityHead(ClassificationHead):
     difficult in Incendio.
     """
 
-    # def __init__(self, similarity=None, last_act='log_softmax',
-    #              temperature='auto', mlp_in=None):
     def __init__(self, similarity=None, last_act='log_softmax',
                  temperature='auto', fs=(64, 16, 3)):
         """
@@ -386,11 +384,6 @@ class SimilarityHead(ClassificationHead):
                           'in SimilarityHead should be log_softmax.')
 
         self.similarity = similarity or nn.CosineSimilarity(dim=-1)
-        # if mlp_in:
-        #     self.mlp = nn.Linear(mlp_in, mlp_in)
-        #     warnings.warn('SimilarityHead has small MLP after the similarity '
-        #                   'computation. Your use case should NOT involve '
-        #                   'contrastive loss.')
         if fs:
             self.mlp = nn.Sequential(*[nn.Linear(f_in, f_out) for f_in, f_out
                                        in zip([fs[-1]]+list(fs), fs)])
@@ -435,6 +428,24 @@ class Unmixer(BaseModel):
         x_new, *x = [self.pool(self.encoder(x)) for x in xb]
         x = torch.stack(x, dim=1)
         return self.head(x_new, x)
+
+
+class SingleInputBinaryModel(BaseModel):
+
+    def __init__(self, encoder=None, head=None, pool_type='cat',
+                 enc_out=None):
+        super().__init__()
+        enc = encoder or Encoder()
+        pool = PoolFlatten(pool_type)
+        # If not provided, try to infer number of output channels from encoder.
+        # Probably not foolproof but for this use case I think it should work.
+        enc_out = enc_out or list(enc.parameters())[-1].shape[-1]
+        enc_mult = 2 if pool_type == 'cat' else 1
+        head = head or nn.Linear(enc_out * enc_mult, 1)
+        self.groups = nn.Sequential(enc, pool, head)
+
+    def forward(self, x):
+        return self.groups(x)
 
 
 class SupervisedEncoderClassifier(nn.Module):

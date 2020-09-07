@@ -353,10 +353,65 @@ class QuadrantDataset(Dataset):
             return img[:, self.mid_idx:, self.mid_idx:]
 
 
+class PatchworkDataset(Dataset):
+    """Dataset for binary classification. Replace a square patch of an image
+    with patch from a second image. 50% of the time, this will be a different
+    image, and 50% of the time it will be the same as the source image
+    (the latter are considered positives). If this task proves too easy, we
+    could adjust it by adding optional transform(s) to the patch before
+    adding it to the base image. I don't want to make the task too hard to
+    start with though, since that bogged me down on the Mixup task.
+    """
+
+    def __init__(self, dir_=None, paths=(), shape=(128, 128), n=3,
+                 patch_shape=(48, 48)):
+        if not dir_ and not paths:
+            raise ValueError('One of dir_ or paths should be non-null.')
+
+        self.paths = paths or get_image_files(dir_)
+        self.n = n
+        self.load_img = partial(load_img, shape=shape)
+        self.shape = shape
+        self.patch_h, self.patch_w = patch_shape
+        self.max_top = shape[0] - self.patch_h
+        self.max_left = shape[1] - self.patch_w
+
+    def __len__(self):
+        return len(self.paths)
+
+    def __getitem__(self, i):
+        """
+        1 if patch is from the original image, 0 otherwise.
+        """
+        img = self.load_img(self.paths[i])
+        src_coords = self.sample_coords()
+        if np.random.uniform() > 0.5:
+            img2 = img.clone().detach()
+            targ_coords = self.sample_coords()
+            y = 1
+        else:
+            i2 = i
+            while i2 == i:
+                i2 = np.random.choice(len(self))
+            img2 = self.load_img(self.paths[i2])
+            targ_coords = src_coords
+            y = 0
+
+        img[targ_coords] = img2[src_coords]
+        return img, torch.tensor([y], dtype=torch.float)
+
+    def sample_coords(self):
+        left_x = np.random.randint(0, self.max_left)
+        top_y = np.random.randint(0, self.max_top)
+        return (slice(None),
+                slice(top_y, top_y + self.patch_h),
+                slice(left_x, left_x + self.patch_w))
+
+
 @valuecheck
 def get_databunch(dir_=None, paths=None,
-                  mode:('mixup', 'scale', 'quadrant')='mixup', bs=32,
-                  valid_bs_mult=1, train_pct=.9, shuffle_train=True,
+                  mode:('mixup', 'scale', 'quadrant', 'patchwork')='mixup',
+                  bs=32, valid_bs_mult=1, train_pct=.9, shuffle_train=True,
                   drop_last=True, random_state=0, max_train_len=None,
                   max_val_len=None, **ds_kwargs):
     """Wrapper to quickly get train and validation datasets and dataloaders
@@ -460,7 +515,7 @@ def ds_subset(ds, n, random=False, attr='samples'):
     """
     ds = copy(ds)
     samples = getattr(ds, attr)
-    setattr(ds, attr, [samples[i] for i in np.random.randint(0, len(ds), n)] \
+    setattr(ds, attr, [samples[i] for i in np.random.randint(0, len(ds), n)]
             if random else samples[:n])
     return ds
 
