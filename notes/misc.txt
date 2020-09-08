@@ -189,3 +189,9 @@ Observations
 -As expected, cosine similarity is highest for the identical image pairs, but the difference isn't as big as I'd have expected. Again, this could be because they're all dogs.
     -Not clear to me how effective the ElementwiseMult is as a similarity measure between two vectors. Seems like it should be fine (we're holding 1 tensor constant so differences are all due to the second tensor). Or is that the problem? Could try L1 or L2 distance. That could be with a reduction to get a scalar like cosine similarity, or without a reduction to get a tensor like ElementwiseMult.
 
+9/7/20
+------
+-other possibilities to keep in mind:
+    -try using Fastai classification head
+    -try to reformulate mixup task a little bit to work with triplet loss (or define a slight variant that works with anchor+3 images)
+    -idea from adam bielski's siamese network repo: create "test mode" in datasets that sets predefined triplets. I think this is similar to my recent approach of trying to remove all randomness in mini batch creation when training on a subset. (repo at https://github.com/adambielski/siamese-triplet/blob/master/datasets.py)
