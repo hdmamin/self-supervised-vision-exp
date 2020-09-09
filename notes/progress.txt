@@ -245,10 +245,13 @@ Plans: Build larger default classification head than the single layer. Maybe we'
 
 9/8/20
 ------
-Progress:
+Progress: Added fastai classification head as the default for patchwork binary model (cut off pool and flatten, which I added separately). Tried training this on a subset and it does far worse than the single linear layer, even when turning off dropout (???). Also tried increasing batch size in case it was adding too much noise to the batch norm stats, but still didn't learn anything. Started writing script s01 to prepare for GPU experiments (still skeptical this will work, but the single linear layer easily overfits the subset so it seems time to progress to larger scale training).
 
-Plans:
+Plans: Continue fleshing out s01. Consider running a notebook training run in the meantime - script is slow to build and this would give us some intuition for whether the task learns at all (so far we've been focused entirely on just trying to make the implementation function at all, but this is an entirely separate question of whether it can learn effectively on something besides a tiny subset).
 
+9/9/20
+------
+Progress: 
 
-
+Plans: 
 

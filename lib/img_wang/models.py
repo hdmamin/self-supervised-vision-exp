@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from fastai2.layers import PoolFlatten
+from fastai2.vision.learner import create_head
 import numpy as np
 import torch
 import torch.nn as nn
@@ -432,8 +433,8 @@ class Unmixer(BaseModel):
 
 class SingleInputBinaryModel(BaseModel):
 
-    def __init__(self, encoder=None, head=None, pool_type='cat',
-                 enc_out=None):
+    def __init__(self, encoder=None, head=None, pool_type='cat', enc_out=None,
+                 **head_kwargs):
         super().__init__()
         enc = encoder or Encoder()
         pool = PoolFlatten(pool_type)
@@ -441,7 +442,8 @@ class SingleInputBinaryModel(BaseModel):
         # Probably not foolproof but for this use case I think it should work.
         enc_out = enc_out or list(enc.parameters())[-1].shape[-1]
         enc_mult = 2 if pool_type == 'cat' else 1
-        head = head or nn.Linear(enc_out * enc_mult, 1)
+        # Cut off pool + flatten from fastai head because we already have that.
+        head = head or create_head(enc_out*enc_mult, 1, **head_kwargs)[2:]
         self.groups = nn.Sequential(enc, pool, head)
 
     def forward(self, x):

@@ -194,4 +194,6 @@ Observations
 -other possibilities to keep in mind:
     -try using Fastai classification head
     -try to reformulate mixup task a little bit to work with triplet loss (or define a slight variant that works with anchor+3 images)
+        -see Multiclass N-pair Loss (Sohn 2016 paper). Blog post here: https://towardsdatascience.com/contrasting-contrastive-loss-functions-3c13ca5f055e
+        -same blog post as above suggests that the alternate contrastive loss formula I came across is actually NT-Xent loss (Chen 2020 paper). This is implemented in SimilarityHead if we use SimilarityHead with no mlp layers and NLLLoss.
     -idea from adam bielski's siamese network repo: create "test mode" in datasets that sets predefined triplets. I think this is similar to my recent approach of trying to remove all randomness in mini batch creation when training on a subset. (repo at https://github.com/adambielski/siamese-triplet/blob/master/datasets.py)
