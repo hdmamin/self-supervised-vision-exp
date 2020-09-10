@@ -406,6 +406,11 @@ class PatchworkDataset(Dataset):
         """
         1 if patch is from the original image, 0 otherwise.
         """
+        # Length can change during training because we delete bad paths due to
+        # weird bug.
+        if i > len(self):
+            return self[np.random.randint(len(self))]
+
         img = self.load_img(self.paths[i])
         src_coords = self.sample_coords()
         if np.random.uniform() <= self.pct_pos:
@@ -423,7 +428,15 @@ class PatchworkDataset(Dataset):
             img, targ_coords, img2, src_coords
         )
 
-        img[targ_coords] = img2[src_coords]
+        # Weird memory bug occurs for ~1% of images. Just remove them.
+        try:
+            img.data[targ_coords] = img2[src_coords]
+        except Exception as e:
+            if 'memory location' in str(e):
+                self.paths.pop(i)
+                return self[i]
+            else:
+                raise e
         return img, torch.tensor([y], dtype=torch.float)
 
     def sample_coords(self):
