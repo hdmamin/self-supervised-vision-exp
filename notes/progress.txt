@@ -251,7 +251,15 @@ Plans: Continue fleshing out s01. Consider running a notebook training run in th
 
 9/9/20
 ------
-Progress: 
+Progress: Wrote a couple functions to set all random seeds and/or check if gpu is available. Updated lib requirements and built environment on paperspace. Debugged weird dataset issue (memory location error despite use of clone and detach) and found that it was always happening with the same images, so I just had the dataset delete those paths. Almost got training working on GPU but need to add comet config file.
 
-Plans: 
+Plans: Add comet config file and get training going in notebook. While model trains, work on training script s01.
+
+9/10/20
+-------
+Progress:
+
+Plans:
+
+
 
