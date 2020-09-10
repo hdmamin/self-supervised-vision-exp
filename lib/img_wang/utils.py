@@ -4,9 +4,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
+import random
 import torch
 
 from img_wang.config import Config
+from incendio.utils import DEVICE
 
 
 def summarize_acts(acts):
@@ -76,6 +78,22 @@ def next_model_dir(new=True):
     Path: Subdirectory inside data/models which may or may not exist yet.
     """
     return Config.model_dir/f'v{next_model_version(new)}'
+
+
+def reproducible(seed=1, verbose=True):
+    if verbose: print('Setting seeds for reproducible training.')
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
+def gpu_setup(make_reproducible=True, seed=1, verbose=1):
+    if make_reproducible: reproducible(seed, verbose)
+    assert torch.cuda.is_available(), 'Cuda not available'
+    assert DEVICE.type == 'cuda'
 
 
 def Display(lines, out):
