@@ -1,20 +1,20 @@
+# Import comet before torch, sometimes throws error otherwise.
+from img_wang.callbacks import CometCallbackWithGrads
 import torch
 import torch.nn.functional as F
 
-
-from img_wang.callbacks import CometCallbackWithGrads
 from img_wang.config import Config
 from img_wang.data import get_databunch
 from img_wang.models import SingleInputBinaryModel, Encoder, TorchvisionEncoder
 from img_wang.utils import fire, next_model_dir, gpu_setup
-from incendio.callbacks import MetricHistory
+from incendio.callbacks import MetricHistory, ModelCheckpoint, EarlyStopper
 from incendio.core import Trainer
 from incendio.metrics import mean_soft_prediction, std_soft_prediction, \
     percent_positive
 
 
 def train(bs=8, subset=None, pct_pos=.5, debug=None, ds_mode='patchwork',
-          enc_arch=None, enc_pretrained=False, loss='bce', pre=''):
+          enc_arch=None, enc_pretrained=False, loss='bce', pre='', patience=5):
     gpu_setup()
     dst, dsv, dlt, dlv = get_databunch(Config.unsup_dir,
                                        mode=ds_mode,
@@ -33,8 +33,12 @@ def train(bs=8, subset=None, pct_pos=.5, debug=None, ds_mode='patchwork',
     if loss == 'bce':
         loss = F.binary_cross_entropy_with_logits
     out_dir = Config.model_dir/pre if pre else next_model_dir(new=False)
-    t = Trainer(net, dst, dlt, dlv, loss, mode='binary',
-                out_dir=out_dir)
+    callbacks = [MetricHistory(),
+                 CometCallbackWithGrads('img_wang'),
+                 ModelCheckpoint(),
+                 EarlyStopper('loss', 'min', patience=patience)]
+    t = Trainer(net, dst, dlt, dlv, loss, mode='binary', out_dir=out_dir,
+                last_act=torch.sigmoid, callbacks=callbacks, metrics=metrics)
 
 
 if __name__ == '__main__':

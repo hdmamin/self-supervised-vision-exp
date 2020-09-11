@@ -1,0 +1,16 @@
+v0
+--
+Summary:
+Pretrained encoder with single linear layer head, first experiment that's not on a tiny subset.
+
+Approximate Stats:
+GPU Memory Usage: 1,985/8,126 MB
+GPU Utilization: big fluctuations between 0-98%, only high for brief moments
+CPU Memory: 2,425/30,147 MB
+
+Takeaways:
+-bs of 64 could be much bigger. Experiment with a couple epoch run to see how big we can go.
+-train loss is going down, though at first it didn't look like it. Take a look at metric plots afterwards to see how volatile things are: at first I thought LR was too high but now things are looking pretty slow. Maybe this is a good opportunity for 1 cycle scheduling: let it ramp up to the max LR. [UPDATE: loss curves actually look pretty good, not overly noisy or overly gradual.]
+-add std_soft_prediction next time: want to make sure we're not predicting a constant.
+-Remember this is still kind of a debugging run: we're using a pretrained encoder which is cheating. Maybe worth stopping this early.
+

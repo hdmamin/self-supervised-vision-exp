@@ -34,7 +34,7 @@ class CometCallbackWithGrads(CometCallback):
         for name, weights in trainer.net.named_parameters():
             if 'bias' in name or not weights.requires_grad:
                 continue
-            abs_grads = np.abs(weights.grad.detach().numpy())
+            abs_grads = np.abs(weights.grad.detach().cpu().numpy())
             self.means[name].append(abs_grads.mean())
             self.stds[name].append(abs_grads.std())
 
