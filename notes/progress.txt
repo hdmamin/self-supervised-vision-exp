@@ -257,9 +257,16 @@ Plans: Add comet config file and get training going in notebook. While model tra
 
 9/10/20
 -------
+Progress: Got comet configured on GPU. Ran first larger scale experiment with patchwork dataset and it seemed to work decently well so far (granted with a pretrained encoder, and I haven't tried transferring the weights yet, so there's a ways to go. But at least there's signs of progress). 
+
+Plans: Examine results of v0 more in depth. Find what batch size can fit on the GPU. Options: clean up post-experiment code into a "top_mistakes" function, continue writing s01 script, try a run with an untrained encoder (though maybe best to power through the script before doing future experiments).
+
+9/11/20
+-------
 Progress:
 
 Plans:
+
 
 
 
