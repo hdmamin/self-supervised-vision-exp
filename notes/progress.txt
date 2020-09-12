@@ -263,10 +263,13 @@ Plans: Examine results of v0 more in depth. Find what batch size can fit on the 
 
 9/11/20
 -------
-Progress:
+Progress: Experimented with batch sizes to see what can fit on GPU. Ran v1 experiment with 8x bs which learned more slowly (need to add higher LR and increase dataloader num_workers to speed up training). Wrote some documentation for PatchworkDataset. Examined v0 results a bit.
 
-Plans:
+Plans: Experiment with num_workers to see if that speeds up dataloader like I think it will. Examine v1 results more thoroughly. Maybe get back to work on s01 script.
 
+9/12/20
+-------
+Progress: 
 
-
+Plans: 
 
