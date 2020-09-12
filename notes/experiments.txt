@@ -14,3 +14,19 @@ Takeaways:
 -add std_soft_prediction next time: want to make sure we're not predicting a constant.
 -Remember this is still kind of a debugging run: we're using a pretrained encoder which is cheating. Maybe worth stopping this early.
 
+
+v1
+--
+Summary:
+Same as V0 (pretrained encoder with single linear layer head) but greatly increased bs from 64 to 512. Also added std_soft_predictions metric.
+
+Approximate Stats:
+GPU Memory Usage: 11,889/8,126 MB
+GPU Utilization: Mostly either 0 or 100, I think because batches take a long time to load. Sort of though I remembered that torch loads next batch and stores in CPU until ready, but maybe that's an option I have to enable.
+CPU Memory: 3,000/30,147 MB (max usage)
+
+Takeaways:
+-Epoch time decreased from ~1 minute to ~30 seconds with the bigger bs. If the "extra batch in CPU" option isn't enabled, this could likely be dramatially decreased.
+        -Try num_workers>0 next time. I think this may achieve what I'm looking for.
+-Realized in v0, val dataloader was dropping incomplete batches. Fixed this in lib.
+-Looks like loss is going down more slowly on both train and val sets. Examine loss curves for more insight into this. Realized with more stable gradients from bigger bs, we should probably be upping the LR.

@@ -510,7 +510,7 @@ def get_databunch(dir_=None, paths=None,
     dst = DS(paths=train[:max_train_len], **ds_kwargs)
     dsv = DS(paths=val[:max_val_len], **ds_kwargs)
     dlt = DataLoader(dst, bs, drop_last=drop_last, shuffle=shuffle_train)
-    dlv = DataLoader(dsv, int(bs * valid_bs_mult), drop_last=drop_last)
+    dlv = DataLoader(dsv, int(bs * valid_bs_mult), drop_last=False)
     return Args(ds_train=dst, ds_val=dsv, dl_train=dlt, dl_val=dlv)
 
 

@@ -197,3 +197,17 @@ Observations
         -see Multiclass N-pair Loss (Sohn 2016 paper). Blog post here: https://towardsdatascience.com/contrasting-contrastive-loss-functions-3c13ca5f055e
         -same blog post as above suggests that the alternate contrastive loss formula I came across is actually NT-Xent loss (Chen 2020 paper). This is implemented in SimilarityHead if we use SimilarityHead with no mlp layers and NLLLoss.
     -idea from adam bielski's siamese network repo: create "test mode" in datasets that sets predefined triplets. I think this is similar to my recent approach of trying to remove all randomness in mini batch creation when training on a subset. (repo at https://github.com/adambielski/siamese-triplet/blob/master/datasets.py)
+
+9/11/20
+-------
+Batch size experiments
+
+bs: 256
+GPU memory (mobilenet encoder): ~6,300 / 16,300 MB
+
+bs: 512
+GPU memory (mobilenet encoder): ~11,900 / 16,300 MB
+           (img_wang encoder):  ~4,900
+
+bs: 1024
+GPU memory (img_wang encoder): ~7,000 (fairly long stretches of low GPU utilization)
