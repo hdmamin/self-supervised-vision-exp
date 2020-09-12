@@ -371,17 +371,33 @@ class PatchworkDataset(Dataset):
 
         Parameters
         ----------
-        dir_
-        paths
-        shape
-        n
+        dir_: str or Path
+            Name of directory containing image files.
+        paths: Iterable[str or Path]
+            Alternately, user can provide a list of image paths instead of a
+            directory name. Exactly one of these should be not None.
+        shape: tuple[int]
+            Shape to resize images to. Just use defaults always (the image wang
+            challenge was designed with specific shapes in mind to allow for
+            direct comparisons).
+        n: int
+            Number of source images to use. Must be >=2 otherwise there's
+            nothing to mix.
         patch_shape
-        pct_pos
+        pct_pos: float
+            Percent of generated samples that will be positives (patch comes
+            from the same image as the source image).
         debug_mode: str or None
             If not None, specifies an easier mode to use for debugging
             purposes. 'fixed' ensures that the patch (both source and target)
             will be in the far upper left corner (i.e. a fixed position). This
             lets us remove randomness for troubleshooting on tiny subsets.
+        fixed_offset: int
+            When using debug_mode='fixed', this determines how much to shift
+            the location of the coordinates in the image being updated. Note:
+            there may be a bug here, not sure I accounted for this when picking
+            coordinates, so maybe it's possible to end up with coordinates
+            outside the image. Address this if it becomes an issue.
         """
         if not dir_ and not paths:
             raise ValueError('One of dir_ or paths should be non-null.')
@@ -445,6 +461,11 @@ class PatchworkDataset(Dataset):
                 slice(left_x, left_x + self.patch_w))
 
     def _update_xy_fixed(self, img_targ, coords_targ, img_src, coords_src):
+        """Update coordinates of target (in the image being updated). We pass
+        in all images and coordinates to allow more flexibility if we create
+        other transforms later. This interface should allow for any
+        transformation we might want.
+        """
         top_y = coords_src[1].start + self.fixed_offset
         left_x = coords_src[2].start + self.fixed_offset
         coords_targ = (slice(None),
