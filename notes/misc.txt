@@ -211,3 +211,26 @@ GPU memory (mobilenet encoder): ~11,900 / 16,300 MB
 
 bs: 1024
 GPU memory (img_wang encoder): ~7,000 (fairly long stretches of low GPU utilization)
+
+9/12/20
+-------
+DataLoader num_workers experiment notes
+
+-With bs=64, looks like time to load data decreases super-linearly initially but quickly becomes sublinear (i.e. something like T=k/n). Note this does not yet involve putting data on the GPU. Increasing from 1 to 2 workers yielded ~70% speedup, 2->4 yielded another ~50%, 4->8 yielded another ~30%.
+-With bs=512, 4 workers took about as much time per epoch (again just loading data on the cpu) as 2 workers with bs 64. I think this is because there's a high time investment to load the first batch (not sure if subsequent batches are affected).
+-None of these used much CPU memory relative to what's available. Will have to see what happens when we get the gpu involved.
+
+-
+bs: 64
+num_workers: 8
+Epoch train time: 9s
+CPU: 3,050 MB
+GPU: 2,050 MB
+
+bs: 256
+num_workers: 8
+Epoch train time: 9s
+CPU: up to3,400 MB
+GPU: 6,293 MB
+
+GPU utilization mostly pretty high for bs 128 and 512 as well. bs 512 adds a second per epoch though.

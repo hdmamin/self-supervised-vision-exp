@@ -1,5 +1,6 @@
 # Import comet before torch, sometimes throws error otherwise.
 from img_wang.callbacks import CometCallbackWithGrads
+from sklearn.metrics import accuracy_score
 import torch
 import torch.nn.functional as F
 
@@ -13,20 +14,40 @@ from incendio.metrics import mean_soft_prediction, std_soft_prediction, \
     percent_positive
 
 
-def train(bs=8, subset=None, pct_pos=.5, debug=None, ds_mode='patchwork',
-          enc_arch=None, enc_pretrained=False, loss='bce', pre='', patience=5):
+def train(bs=8,
+          num_workers=8,
+          subset=None,
+          pct_pos=.5,
+          debug=None,
+          ds_mode='patchwork',
+          # MODEL PARAMETERS
+          enc='TorchvisionEncoder',
+          enc_kwargs={'arch': 'mobilenet_v2', 'pretrained': True},
+          head='', # TODO
+          head_kwargs={}, # TODO
+          # TRAINING PARAMETERS
+          epochs=100,
+          lrs=(1e-5, 1e-5, 1e-4),
+          lr_mult=1.0,
+          gradual_unfreeze=True,
+          loss='bce',
+          patience=8
+          # BOOKKEEPING PARAMETERS
+          pre='',
+          ):
     gpu_setup()
     dst, dsv, dlt, dlv = get_databunch(Config.unsup_dir,
                                        mode=ds_mode,
                                        bs=bs,
                                        max_train_len=subset,
                                        max_val_len=subset,
+                                       num_workers=num_workers,
                                        pct_pos=pct_pos,
                                        debug_mode=debug)
 
     # TODO: fill in based on chosen params.
-    enc = None
-    head = None
+    enc = eval(enc)(**enc_kwargs)
+    head = eval(head)(**head_kwargs)
     net = SingleInputBinaryModel(enc, head)
 
     # Preparing for possibility of other loss functions.
@@ -37,8 +58,12 @@ def train(bs=8, subset=None, pct_pos=.5, debug=None, ds_mode='patchwork',
                  CometCallbackWithGrads('img_wang'),
                  ModelCheckpoint(),
                  EarlyStopper('loss', 'min', patience=patience)]
+    if gradual_unfreeze:
+        callbacks.append(ModelUnfreezer({1: 3}, 'groups', 'layers'))
+    metrics = [mean_soft_prediction, std_soft_prediction, accuracy_score]
     t = Trainer(net, dst, dlt, dlv, loss, mode='binary', out_dir=out_dir,
                 last_act=torch.sigmoid, callbacks=callbacks, metrics=metrics)
+    t.fit(epochs, lr, lr_mult)
 
 
 if __name__ == '__main__':

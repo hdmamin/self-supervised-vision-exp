@@ -479,7 +479,7 @@ def get_databunch(dir_=None, paths=None,
                   mode:('mixup', 'scale', 'quadrant', 'patchwork')='mixup',
                   bs=32, valid_bs_mult=1, train_pct=.9, shuffle_train=True,
                   drop_last=True, random_state=0, max_train_len=None,
-                  max_val_len=None, **ds_kwargs):
+                  max_val_len=None, num_workers=8, **ds_kwargs):
     """Wrapper to quickly get train and validation datasets and dataloaders
     from a directory of unlabeled images. This isn't actually a fastai
     databunch, but in practice what it achieves is sort of similar and I
@@ -530,8 +530,10 @@ def get_databunch(dir_=None, paths=None,
     DS = eval(mode.title() + 'Dataset')
     dst = DS(paths=train[:max_train_len], **ds_kwargs)
     dsv = DS(paths=val[:max_val_len], **ds_kwargs)
-    dlt = DataLoader(dst, bs, drop_last=drop_last, shuffle=shuffle_train)
-    dlv = DataLoader(dsv, int(bs * valid_bs_mult), drop_last=False)
+    dlt = DataLoader(dst, bs, drop_last=drop_last, shuffle=shuffle_train,
+                     num_workers=num_workers)
+    dlv = DataLoader(dsv, int(bs * valid_bs_mult), drop_last=False,
+                     num_workers=num_workers)
     return Args(ds_train=dst, ds_val=dsv, dl_train=dlt, dl_val=dlv)
 
 
