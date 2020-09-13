@@ -269,7 +269,7 @@ Plans: Experiment with num_workers to see if that speeds up dataloader like I th
 
 9/12/20
 -------
-Progress: Experimented with increasing num_workers with various batch sizes (see notes/misc.txt) and found large speedups (~9s epochs now!). Examined v1 results a bit. Continued fleshing out s01 script - still not quite ready for training but it's getting close. Though as I get farther, I'm now realizing we likely need to train the encoder by itself first before introducing the classification head (v0 avoided this problem by using a pretrained encoder, but of course that defeats the point).
+Progress: Experimented with increasing num_workers with various batch sizes (see notes/misc.txt) and found large speedups (~9s epochs now!). Examined v1 results a bit. Continued fleshing out s01 script - still not quite ready for training but it's getting close. Though as I get farther, I'm now realizing we likely need to train the encoder by itself first before introducing the classification head (v0 avoided this problem by using a pretrained encoder, but of course that defeats the point). Read Chaudhary blog post on self-supervised CV.
 
 Plans: Work on s01 training script more. Maybe try training run without pretrained weights to validate my suspicion that this won't work well. Maybe try loading a larger torchvision model to see how much this affects training times, viable batch sizes, etc.
 
