@@ -275,8 +275,13 @@ Plans: Work on s01 training script more. Maybe try training run without pretrain
 
 9/13/20
 -------
+Progress: Experimented with pin_memory in dataloader but it didn't seem to help. Tried randomly initialized torchvision encoder and, as expected, it learned nothing. However, tried my custom encoder with fastai head and that was fitting the training set pretty well. This was with dropout turned down so maybe if we increase that a bit we could learn something. Also read another blog post on self-supervised learning (not that useful) and revisited epoching's blog post to confirm whether they trained their encoder separately (they did not). Combined unattached code into "top_mistakes" function which showed more evidence of a possible dataset bug.
+
+Plans: Manually examine some images and read through image_wang and/or imagenet documentation to see if there might be duplicates. Otherwise, may need to investigate Patchwork Dataset for possible bugs. Consider adding debug mode: perhaps try adding attributes to each tensor showing their img1 and img2 indices.
+
+9/14/20
+-------
 Progress: 
 
 Plans: 
-
 

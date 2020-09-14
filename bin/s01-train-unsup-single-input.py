@@ -14,7 +14,8 @@ from incendio.metrics import mean_soft_prediction, std_soft_prediction, \
     percent_positive
 
 
-def train(bs=8,
+def train(# DATA PARAMETERS
+          bs=8,
           num_workers=8,
           subset=None,
           pct_pos=.5,

@@ -234,3 +234,9 @@ CPU: up to3,400 MB
 GPU: 6,293 MB
 
 GPU utilization mostly pretty high for bs 128 and 512 as well. bs 512 adds a second per epoch though.
+
+9/13/20
+-------
+pin_memory experiments
+
+-Doesn't seem to make much of a difference in speed, maybe even adds 0-1 sec/epoch.
