@@ -240,3 +240,8 @@ GPU utilization mostly pretty high for bs 128 and 512 as well. bs 512 adds a sec
 pin_memory experiments
 
 -Doesn't seem to make much of a difference in speed, maybe even adds 0-1 sec/epoch.
+
+-Other task ideas:
+    -use albumentations MedianBlur or JpegCompression transforms. Then use SiameseNet to predict whether a pair of images has the same source image or if they were randomly paired. Thinking this forces the net to focus on high level features since details aren't available in the blurred versions.
+    -similar: apply lots of transforms to try to change the source image a ton. We want hard pairs (or triplets), so a simple rotation (for example) may not be as effective as {rotation + blur + noise + rgb shift + vertical flip}.
+
