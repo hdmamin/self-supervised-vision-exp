@@ -425,6 +425,7 @@ class PatchworkDataset(Dataset):
         img = self.load_img(self.paths[i])
         src_coords = self.sample_coords()
         if np.random.uniform() <= self.pct_pos:
+            i2 = i
             img2 = img.clone().detach()
             targ_coords = self.sample_coords()
             y = 1
@@ -443,6 +444,7 @@ class PatchworkDataset(Dataset):
         while True:
             try:
                 img.data[targ_coords] = img2[src_coords]
+                img.idx = (i, i2)
                 return img, torch.tensor([y], dtype=torch.float)
             except Exception as e:
                 if 'memory location' in str(e):

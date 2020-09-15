@@ -281,7 +281,7 @@ Plans: Manually examine some images and read through image_wang and/or imagenet 
 
 9/14/20
 -------
-Progress: 
+Progress: Updated patchwork dataset to store indices of both images as attribute. Manually examined a couple hundred exaples looking for bugs but didn't find any.
 
 Plans: 
 
