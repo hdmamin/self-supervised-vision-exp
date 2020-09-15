@@ -1,43 +1,6 @@
 import fire
-from glob import glob
-import matplotlib.pyplot as plt
-import numpy as np
-import os
-import pandas as pd
-import random
-import torch
 
 from img_wang.config import Config
-from incendio.utils import DEVICE
-
-
-def summarize_acts(acts):
-    print(f'Shape: {acts.shape}')
-    flat = acts.flatten().detach().numpy()
-    q = np.arange(0, 1.01, .1)
-    print('% > 0:', (flat > 0).mean())
-    pd.Series(flat).rename('quantiles').quantile(q).pprint()
-
-    plt.hist(flat)
-    plt.show()
-
-
-def rand_choice(tn):
-    """Like np.random.choice but for tensors. For now this only works for
-    selecting single values from rank 1 tensors.
-
-    Parameters
-    ----------
-    tn: torch.tensor
-        Shape (n,). Any dtype.
-
-    Returns
-    -------
-    torch.tensor: Rank 1, shape (1,).
-    """
-    assert tn.ndim == 1, 'rand_choice is designed to work on rank 1 tensors.'
-    idx = torch.randint(tn.shape[0], size=(1,))
-    return tn[idx]
 
 
 def next_model_version(new=True):
@@ -78,22 +41,6 @@ def next_model_dir(new=True):
     Path: Subdirectory inside data/models which may or may not exist yet.
     """
     return Config.model_dir/f'v{next_model_version(new)}'
-
-
-def reproducible(seed=1, verbose=True):
-    if verbose: print('Setting seeds for reproducible training.')
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-
-
-def gpu_setup(make_reproducible=True, seed=1, verbose=1):
-    if make_reproducible: reproducible(seed, verbose)
-    assert torch.cuda.is_available(), 'Cuda not available'
-    assert DEVICE.type == 'cuda'
 
 
 def Display(lines, out):

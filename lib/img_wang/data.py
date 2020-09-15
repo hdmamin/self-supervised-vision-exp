@@ -9,7 +9,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 from htools import Args, valuecheck
-from img_wang.utils import rand_choice
+from img_wang.torch_utils import rand_choice
 
 
 class ImageMixer:

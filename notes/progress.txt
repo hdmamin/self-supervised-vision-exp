@@ -281,7 +281,13 @@ Plans: Manually examine some images and read through image_wang and/or imagenet 
 
 9/14/20
 -------
-Progress: Updated patchwork dataset to store indices of both images as attribute. Manually examined a couple hundred exaples looking for bugs but didn't find any.
+Progress: Updated patchwork dataset to store indices of both images as attribute. Manually examined a couple hundred exaples looking for bugs but didn't find any. Realized model "top mistakes" were a more efficient way to find these possible bugs, so loaded one of my trained models to do this. Realized this would require some updates to top_mistake func and I started on this but didn't finish. Did a bit more library refactoring to separate torch_utils and utils as well.
+
+Plans: Maybe update collate_fn to store ds x.idx as batch xb.idx, or consider if there's a better way to do this, since this might make for kind of an annoying interface if I swap in other datasets. Finish exploring the potential bug issue (try to wrap this up today - given than the couple hundred samples I explored showed 0-1 errors, this doesn't seem like a big problem. Even if something is going wrong, it's not common and we can handle some noise. I'm thinking there are just some very similar images (though that only explains the negative labels which look positive; the positive labels which look negative are still a mystery).
+
+9/15/20
+-------
+Progress: 
 
 Plans: 
 
