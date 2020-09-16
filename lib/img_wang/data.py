@@ -476,13 +476,34 @@ class PatchworkDataset(Dataset):
         return img_targ, coords_targ, img_src, coords_src
 
 
+def patchwork_collate_fn(rows):
+    """Collate function for torch dataloader that stores indices for each
+    source image from PatchworkDataset.
+
+    Parameters
+    ----------
+    rows: list[tuple]
+        This is automatically called by dataloader and is equivalent to
+        [ds[i] for i in range(bs)] (not sure if this is literally what they do
+        of if there are a couple hidden steps they don't mention, but this is
+        the basic gist).
+
+    Returns
+    -------
+    tuple[torch.tensor]: X has shape (bs, channels, h, w). Y has shape (bs, 1).
+    """
+    x, y = map(torch.stack, zip(*rows))
+    x.idx = [row[0].idx for row in rows]
+    return x, y
+
+
 @valuecheck
 def get_databunch(dir_=None, paths=None,
                   mode:('mixup', 'scale', 'quadrant', 'patchwork')='mixup',
                   bs=32, valid_bs_mult=1, train_pct=.9, shuffle_train=True,
                   drop_last=True, random_state=0, max_train_len=None,
                   max_val_len=None, num_workers=8, pin_memory=False,
-                  **ds_kwargs):
+                  collate_custom=False, **ds_kwargs):
     """Wrapper to quickly get train and validation datasets and dataloaders
     from a directory of unlabeled images. This isn't actually a fastai
     databunch, but in practice what it achieves is sort of similar and I
@@ -496,6 +517,13 @@ def get_databunch(dir_=None, paths=None,
     ----------
     dir_: str or Path
         Directory of images for unsupervised learning.
+    paths: tuple[str or Path]
+        Instead of passing in dir_, you can pass in a list of file paths. This
+        makes it pretty easy to create subsets, though in practice I found it
+        more convenient to specify dir_ along with max_train_len and
+        max_val_len.
+    mode: str
+        Specifies which dataset class to use.
     bs: int
         Train set batch size.
     valid_bs_mult: int or float
@@ -517,6 +545,20 @@ def get_databunch(dir_=None, paths=None,
     max_val_len: int or None
         Max number of paths to place in val dataset. Set to small integer
         to evaluate on subset.
+    num_workers: int
+        Number of processes to use to load data. I.e. we can load n batches,
+        then put 1 on the GPU and pass it through the model while the other n-1
+        stay on the CPU. When the model finishes processing the first batch, we
+        can then quicly load the next batch onto the GPU because the data is
+        already in memory.
+    pin_memory: bool
+        Supposedly this helps when using num_workers > 1 (something about
+        managing the way batches are transferred from their waiting area on the
+        cpu to the gpu). In some quick experiments, I didn't see any speedups
+        though.
+    collate_custom: bool
+        If True, this will try to use a collate function defined specifically
+        for your chosen dataset `mode` (must be named {mode}_collate_fn).
     **ds_kwargs: any
         Additional kwargs to pass to the dataset constructor. This includes
         shape (tuple of image height and width), n (number of source images),
@@ -533,10 +575,14 @@ def get_databunch(dir_=None, paths=None,
     DS = eval(mode.title() + 'Dataset')
     dst = DS(paths=train[:max_train_len], **ds_kwargs)
     dsv = DS(paths=val[:max_val_len], **ds_kwargs)
+
+    collate_fn = eval(f'{mode}_collate_fn') if collate_custom else None
     dlt = DataLoader(dst, bs, drop_last=drop_last, shuffle=shuffle_train,
-                     num_workers=num_workers, pin_memory=pin_memory)
+                     num_workers=num_workers, pin_memory=pin_memory,
+                     collate_fn=collate_fn)
     dlv = DataLoader(dsv, int(bs * valid_bs_mult), drop_last=False,
-                     num_workers=num_workers, pin_memory=pin_memory)
+                     num_workers=num_workers, pin_memory=pin_memory,
+                     collate_fn=collate_fn)
     return Args(ds_train=dst, ds_val=dsv, dl_train=dlt, dl_val=dlv)
 
 
