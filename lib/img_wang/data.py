@@ -569,6 +569,10 @@ def get_databunch(dir_=None, paths=None,
     namedtuple: Train dataset, val dataset, train dataloader, val dataloader.
     """
     assert bool(dir_) + bool(paths) == 1, 'Pass in `dir` OR `paths`.'
+    if collate_custom and num_workers > 0:
+        warnings.warn('Sometimes get some weird behavior with custom '
+                      'collate_fn when num_workers > 0.')
+
     paths = paths or get_image_files(dir_)
     train, val = train_test_split(paths, train_size=train_pct,
                                   random_state=random_state)

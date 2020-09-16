@@ -6,6 +6,7 @@ import pandas as pd
 import random
 import torch
 
+from htools import lmap
 from incendio.core import DEVICE
 
 
@@ -38,25 +39,32 @@ def summarize_acts(acts):
     plt.show()
 
 
-def top_mistakes(trainer, xb=None, yb=None, ds=None, dl=None, n=16, df=None):
+def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16, df=None):
     if xb is None:
-        if ds is None:
-            ds = trainer.ds_val
-            dl = trainer.dl_val
+        if dl is None: dl = trainer.dl_val
         xb, yb = next(iter(dl))
     if df is None:
+        # Construct title strings.
         preds = trainer.predict(xb, logits=False)
-        # TODO: maybe update collate_fn to assign ds idx to batch idx attr.
-        titles = [f'Label: {y.item()}\nPred: {yhat.item():.3f}' #\nIdx: {x.idx}
-                  for x, y, yhat in zip(xb, yb, preds)]
-        df = pd.DataFrame({'y': yb.squeeze(-1).numpy(),
-                           'y_proba': preds.squeeze(-1).cpu().numpy()})
+        titles = []
+        idx = getattr(xb, 'idx', [None] * len(xb))
+        for x, y, yhat, i in zip(xb, yb, preds, idx):
+            titles.append(
+                f'Label: {y.item()}\nPred: {yhat.item():.3f}\nIdx: {i}'
+            )
+
+        df = pd.DataFrame(
+            {'y': yb.squeeze(-1).numpy(),
+             'y_proba': preds.squeeze(-1).cpu().numpy(),
+             'title': titles}
+        )
     sorted_mistakes = df.lambda_sort(lambda x: abs(x.y - x.y_proba),
                                      ascending=False)
     idx = sorted_mistakes.index.values
-    show_images([ds[i][0] for i in idx[:n]],
+    show_images([xb[i] for i in idx[:n]],
                 nrows=int(np.ceil(np.sqrt(n))),
-                titles=[titles[i] for i in idx[:n]])
+                titles=[df.loc[i, 'title'] for i in idx[:n]])
+    plt.tight_layout()
     return sorted_mistakes
 
 

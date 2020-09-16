@@ -287,6 +287,12 @@ Plans: Maybe update collate_fn to store ds x.idx as batch xb.idx, or consider if
 
 9/15/20
 -------
+Progress: Wrote collate_fn that stores src indices on batches and updated get_databunch to allow custom collate_fn. Found issue where collate_fn sometimes fails to store idx when num_workers > 0 and added warning. Made significant updates to top_mistakes() and used this to check results using the new idx provided by collate_fn. So far not seeing any evidence of bugs: I think there are just some images that look pretty similar. This is kind of a good sign - some of the model's mistakes were on samples that fooled me too.
+
+Plans: Work more on s01 (try to finish?).
+
+9/16/20
+-------
 Progress: 
 
 Plans: 
