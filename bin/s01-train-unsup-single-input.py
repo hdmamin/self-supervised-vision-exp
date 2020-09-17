@@ -4,16 +4,19 @@ from sklearn.metrics import accuracy_score
 import torch
 import torch.nn.functional as F
 
+from htools import log_cmd, immutify_defaults
 from img_wang.config import Config
 from img_wang.data import get_databunch
 from img_wang.models import SingleInputBinaryModel, Encoder, TorchvisionEncoder
-from img_wang.utils import fire, next_model_dir, gpu_setup
+from img_wang.torch_utils import gpu_setup
+from img_wang.utils import fire, next_model_dir
 from incendio.callbacks import MetricHistory, ModelCheckpoint, EarlyStopper
 from incendio.core import Trainer
-from incendio.metrics import mean_soft_prediction, std_soft_prediction, \
-    percent_positive
+from incendio.metrics import mean_soft_prediction, std_soft_prediction
 
 
+@log_cmd
+@immutify_defaults
 def train(# DATA PARAMETERS
           bs=8,
           num_workers=8,
@@ -21,11 +24,12 @@ def train(# DATA PARAMETERS
           pct_pos=.5,
           debug=None,
           ds_mode='patchwork',
+          flip_horiz_p=0.0,
+          flip_vert_p=0.0,
           # MODEL PARAMETERS
           enc='TorchvisionEncoder',
           enc_kwargs={'arch': 'mobilenet_v2', 'pretrained': True},
-          head='', # TODO
-          head_kwargs={}, # TODO
+          head_kwargs={},
           # TRAINING PARAMETERS
           epochs=100,
           lrs=(1e-5, 1e-5, 1e-4),
@@ -34,8 +38,12 @@ def train(# DATA PARAMETERS
           loss='bce',
           patience=8
           # BOOKKEEPING PARAMETERS
-          pre='',
-          ):
+          pre=''):
+    """Fit model on unsupervised task where model accepts a single input.
+
+    Parameters
+    ----------
+    """
     gpu_setup()
     dst, dsv, dlt, dlv = get_databunch(Config.unsup_dir,
                                        mode=ds_mode,
@@ -44,7 +52,9 @@ def train(# DATA PARAMETERS
                                        max_val_len=subset,
                                        num_workers=num_workers,
                                        pct_pos=pct_pos,
-                                       debug_mode=debug)
+                                       debug_mode=debug,
+                                       flip_horiz_p=flip_horiz_p,
+                                       flip_vert_p=flip_vert_p)
 
     # TODO: fill in based on chosen params.
     enc = eval(enc)(**enc_kwargs)

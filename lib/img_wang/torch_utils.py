@@ -83,3 +83,20 @@ def gpu_setup(make_reproducible=True, seed=1, verbose=1):
     assert torch.cuda.is_available(), 'Cuda not available'
     assert DEVICE.type == 'cuda'
 
+
+def flip_tensor(x, dim=-1):
+    """Flip a tensor along a specified dimension.
+
+    Parameters
+    ----------
+    x: torch.tensor
+    dim: int
+        For a tensor image, the default flips it horizontally.
+
+    Returns
+    -------
+    torch.tensor
+    """
+    idx = [slice(None) for _ in x.shape]
+    idx[dim] = range(x.shape[dim]-1, -1, -1)
+    return x[idx]

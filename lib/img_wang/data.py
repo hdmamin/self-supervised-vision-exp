@@ -9,8 +9,8 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import warnings
 
-from htools import Args, valuecheck
-from img_wang.torch_utils import rand_choice
+from htools import Args, valuecheck, BasicPipeline, identity
+from img_wang.torch_utils import rand_choice, flip_tensor
 
 
 class ImageMixer:
@@ -367,9 +367,9 @@ class PatchworkDataset(Dataset):
     @valuecheck
     def __init__(self, dir_=None, paths=(), shape=(128, 128), n=3,
                  patch_shape=(48, 48), pct_pos=0.5,
-                 debug_mode:(None, 'fixed')=None, fixed_offset=16):
+                 debug_mode:(None, 'fixed')=None, fixed_offset=16,
+                 flip_horiz_p=0.0, flip_vert_p=0.0):
         """
-
         Parameters
         ----------
         dir_: str or Path
@@ -416,6 +416,15 @@ class PatchworkDataset(Dataset):
             else self._update_xy_fixed
         self.fixed_offset = fixed_offset
 
+        # Technically we could just set it to the pipeline regardless since the
+        # probabilities are zero in the other case, but simply setting it to
+        # identity prevents some useless overhead in generating multiple random
+        # numbers.
+        self.transform = BasicPipeline(
+            RandomTransform(partial(flip_tensor, dim=-1), flip_horiz_p),
+            RandomTransform(partial(flip_tensor, dim=-2), flip_vert_p)
+        ) if flip_horiz_p + flip_vert_p > 0 else identity
+
     def __len__(self):
         return len(self.paths)
 
@@ -444,7 +453,7 @@ class PatchworkDataset(Dataset):
         # Weird memory bug occurs for ~1% of images.
         while True:
             try:
-                img.data[targ_coords] = img2[src_coords]
+                img.data[targ_coords] = self.transform(img2[src_coords])
                 img.idx = (i, i2)
                 return img, torch.tensor([y], dtype=torch.float)
             except Exception as e:
@@ -475,6 +484,17 @@ class PatchworkDataset(Dataset):
                        slice(top_y, top_y + self.patch_h),
                        slice(left_x, left_x + self.patch_w))
         return img_targ, coords_targ, img_src, coords_src
+
+
+class RandomTransform:
+
+    def __init__(self, func, p=.5):
+        self.func = func
+        self.p = p
+
+    def __call__(self, x):
+        if np.random.uniform() < self.p: x = self.func(x)
+        return x
 
 
 def patchwork_collate_fn(rows):
@@ -702,6 +722,9 @@ def duplicate_image(img_srcs, y, composite=True):
 
 
 def identity_wrapper(*args):
+    """Like htools.identity but for multiple arguments. Returns unchanged
+    inputs as a tuple.
+    """
     return args
 
 

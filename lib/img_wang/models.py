@@ -435,6 +435,24 @@ class SingleInputBinaryModel(BaseModel):
 
     def __init__(self, encoder=None, head=None, pool_type='cat', enc_out=None,
                  **head_kwargs):
+        """
+        Parameters
+        ----------
+        encoder
+        head
+        pool_type
+        enc_out: int or None
+            If provided, this is the number of output channels from the
+            encoder. Otherwise we'll try to infer this automatically which is
+            a bit risky but we'll probably find out if it works almost
+            immediately (i.e. it's not like we'll get to the end of training
+            before realizing it's a problem).
+        head_kwargs: any
+            If no head is passed in, we default to fastai's classification
+            head. These kwargs will be passed to its constructor. Common
+            parameters are `lin_ftrs` (output dimensions of linear layers)
+            and `ps` (dropout parameter).
+        """
         super().__init__()
         enc = encoder or Encoder()
         pool = PoolFlatten(pool_type)

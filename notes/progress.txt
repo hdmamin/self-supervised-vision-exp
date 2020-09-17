@@ -293,6 +293,12 @@ Plans: Work more on s01 (try to finish?).
 
 9/16/20
 -------
+Progress: Tentatively finished s01 (still need to test). Added 2 optional transforms to PatchworkDataset (random flip vert and flip horiz). Also had to manually build flip since torchvision acts on pillow images and I don't really want to keep converting back and forth (also messed around a bit trying to get albumentations to work but ultimately decided manual tensor flip was easier). Built RandomTransform class to convert any function to a random transform. Wrote some documentation and fixed a couple old import statements. 
+
+Plans: Maybe add a "random noise" transform. Maybe test out train script to see if there are bugs.
+
+9/17/20
+-------
 Progress: 
 
 Plans: 
