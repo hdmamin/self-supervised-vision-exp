@@ -100,3 +100,22 @@ def flip_tensor(x, dim=-1):
     idx = [slice(None) for _ in x.shape]
     idx[dim] = range(x.shape[dim]-1, -1, -1)
     return x[idx]
+
+
+def random_noise(x, mean=0, std=1, min_val=0, max_val=1):
+    """TODO: docs
+
+    Parameters
+    ----------
+    x
+    mean
+    std
+    min_val
+    max_val
+
+    Returns
+    -------
+
+    """
+    return torch.clamp(x + torch.randn_like(x).mul(std).add(mean),
+                       min_val, max_val)

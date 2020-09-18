@@ -299,7 +299,15 @@ Plans: Maybe add a "random noise" transform. Maybe test out train script to see 
 
 9/17/20
 -------
-Progress: 
+Progress: Buit random noise transform. Created new func_name func in htools and updated basicpipeline with it. Updated randomtransform repr as well but that's not working yet - maybe an autoreload issue? Updated patchwork ds with option to use randomnoise transform.
 
-Plans: 
+Plans: Update docstring for patchwork ds with new transform kwargs. Test out to make sure it works as expected. Update s01 with transform kwargs.
+
+9/18/20
+-------
+Progress:
+
+Plans:
+
+
 

@@ -9,8 +9,8 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 import warnings
 
-from htools import Args, valuecheck, BasicPipeline, identity
-from img_wang.torch_utils import rand_choice, flip_tensor
+from htools import Args, valuecheck, BasicPipeline, identity, func_name
+from img_wang.torch_utils import rand_choice, flip_tensor, random_noise
 
 
 class ImageMixer:
@@ -368,7 +368,8 @@ class PatchworkDataset(Dataset):
     def __init__(self, dir_=None, paths=(), shape=(128, 128), n=3,
                  patch_shape=(48, 48), pct_pos=0.5,
                  debug_mode:(None, 'fixed')=None, fixed_offset=16,
-                 flip_horiz_p=0.0, flip_vert_p=0.0):
+                 flip_horiz_p=0.0, flip_vert_p=0.0, rand_noise_p=0.0,
+                 noise_std=.05):
         """
         Parameters
         ----------
@@ -422,8 +423,9 @@ class PatchworkDataset(Dataset):
         # numbers.
         self.transform = BasicPipeline(
             RandomTransform(partial(flip_tensor, dim=-1), flip_horiz_p),
-            RandomTransform(partial(flip_tensor, dim=-2), flip_vert_p)
-        ) if flip_horiz_p + flip_vert_p > 0 else identity
+            RandomTransform(partial(flip_tensor, dim=-2), flip_vert_p),
+            RandomTransform(partial(random_noise, std=noise_std), rand_noise_p)
+        ) if flip_horiz_p + flip_vert_p + rand_noise_p > 0 else identity
 
     def __len__(self):
         return len(self.paths)
@@ -495,6 +497,9 @@ class RandomTransform:
     def __call__(self, x):
         if np.random.uniform() < self.p: x = self.func(x)
         return x
+
+    def __repr__(self):
+        return f'RandomTransform({func_name(func)}, p={self.p})'
 
 
 def patchwork_collate_fn(rows):
