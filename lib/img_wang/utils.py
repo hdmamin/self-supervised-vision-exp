@@ -3,7 +3,7 @@ import fire
 from img_wang.config import Config
 
 
-def next_model_version(new=True):
+def next_model_version(new=True, skip_names=('tmp')):
     """Get model version number (e.g. 4 for version v4). See `next_model_dir`
     for more explanation on how this is used.
 
@@ -19,7 +19,8 @@ def next_model_version(new=True):
     int: Model version number. Differs depending on choice of `new`.
     """
     return max([int(p.stem.strip('v')) for p in Config.model_dir.iterdir()
-                if p.is_dir()] + [-1]) + (1 if new else 0)
+                if p.is_dir() and p.stem not in skip_names] + [-1]) \
+           + (1 if new else 0)
 
 
 def next_model_dir(new=True):

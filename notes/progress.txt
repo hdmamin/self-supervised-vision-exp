@@ -305,9 +305,18 @@ Plans: Update docstring for patchwork ds with new transform kwargs. Test out to 
 
 9/18/20
 -------
-Progress: Updated docs for patchwork ds to include new transform kwargs. Updated training script to include transform options.
+Progress: Updated docs for patchwork ds to include new transform kwargs. Updated training script to include transform options. Fixed some ubuntu issues causing fastai import errors. Fixed a bunch of bugs when I tried to run train script s01. Added func to lib calculating encoder output dim.
 
-Plans:
+Plans: Investigate and fix error (see notes/misc.txt) that I think is related to the auto computation of encoder output dim. Train a model with this command:
+python bin/s01-train-unsup-single-input.py --global_rand_p .5 --enc_kwargs "{pretrained: False}" --head_kwargs "{ps: .4}" --lrs 2e-4
+
+9/18/20
+-------
+Progress: 
+
+Plans: 
+
+
 
 
 

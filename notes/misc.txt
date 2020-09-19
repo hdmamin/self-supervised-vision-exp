@@ -245,3 +245,8 @@ pin_memory experiments
     -use albumentations MedianBlur or JpegCompression transforms. Then use SiameseNet to predict whether a pair of images has the same source image or if they were randomly paired. Thinking this forces the net to focus on high level features since details aren't available in the blurred versions.
     -similar: apply lots of transforms to try to change the source image a ton. We want hard pairs (or triplets), so a simple rotation (for example) may not be as effective as {rotation + blur + noise + rgb shift + vertical flip}.
 
+9/18/20
+-------
+S01 error (I think my auto calculation of encoder output dim isn't working correctly):
+
+'RuntimeError: non-empty 3D or 4D (batch mode) tensor expected for input

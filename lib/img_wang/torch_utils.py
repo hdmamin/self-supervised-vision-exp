@@ -119,3 +119,9 @@ def random_noise(x, mean=0, std=1, min_val=0, max_val=1):
     """
     return torch.clamp(x + torch.randn_like(x).mul(std).add(mean),
                        min_val, max_val)
+
+
+def n_out_channels(model):
+    return list(model.parameters())[-1].shape[-1]
+
+
