@@ -1,6 +1,7 @@
 # Import comet before torch, sometimes throws error otherwise.
-from img_wang.callbacks import CometCallbackWithGrads
+from fastai2.vision.learner import create_head
 from sklearn.metrics import accuracy_score
+from img_wang.callbacks import CometCallbackWithGrads
 import torch
 import torch.nn.functional as F
 
@@ -18,7 +19,7 @@ from incendio.metrics import mean_soft_prediction, std_soft_prediction
 @log_cmd
 @immutify_defaults
 def train(# DATA PARAMETERS
-          bs=8,
+          bs=128,
           num_workers=8,
           subset=None,
           pct_pos=.5,
@@ -26,9 +27,12 @@ def train(# DATA PARAMETERS
           ds_mode='patchwork',
           flip_horiz_p=0.0,
           flip_vert_p=0.0,
-          # MODEL PARAMETERS
+          rand_noise_p=0.0,
+          noise_std=0.05,
+          # MODEL PARAMETERS. Common head kwargs: lin_ftrs, ps
           enc='TorchvisionEncoder',
           enc_kwargs={'arch': 'mobilenet_v2', 'pretrained': True},
+          head='create_head',
           head_kwargs={},
           # TRAINING PARAMETERS
           epochs=100,
@@ -54,7 +58,9 @@ def train(# DATA PARAMETERS
                                        pct_pos=pct_pos,
                                        debug_mode=debug,
                                        flip_horiz_p=flip_horiz_p,
-                                       flip_vert_p=flip_vert_p)
+                                       flip_vert_p=flip_vert_p,
+                                       rand_noise_p=rand_noise_p,
+                                       noise_std=noise_std)
 
     # TODO: fill in based on chosen params.
     enc = eval(enc)(**enc_kwargs)

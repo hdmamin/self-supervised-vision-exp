@@ -400,6 +400,21 @@ class PatchworkDataset(Dataset):
             there may be a bug here, not sure I accounted for this when picking
             coordinates, so maybe it's possible to end up with coordinates
             outside the image. Address this if it becomes an issue.
+        flip_horiz_p: float
+            Value between 0 and 1 that sets the probability that the image
+            patch will be flipped horizontally.
+        flip_vert_p: float
+            Value between 0 and 1 that sets the probability that the image
+            patch will be flipped vertically.
+        rand_noise_p: float
+            Value between 0 and 1 that sets the probability that random noise
+            will be added to the image patch.
+        noise_std: float
+            If rand_noise_p > 0, this determines the standard deviation of the
+            additive noise applied to the image patch. We've chosen a pretty
+            small default: enough that the difference is usually visible to the
+            human eye, but just barely. No idea if this is a good choice but
+            as a starting point, the rationale seems reasonable enough.
         """
         if not dir_ and not paths:
             raise ValueError('One of dir_ or paths should be non-null.')

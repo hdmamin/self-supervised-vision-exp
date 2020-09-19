@@ -305,7 +305,7 @@ Plans: Update docstring for patchwork ds with new transform kwargs. Test out to 
 
 9/18/20
 -------
-Progress:
+Progress: Updated docs for patchwork ds to include new transform kwargs. Updated training script to include transform options.
 
 Plans:
 
