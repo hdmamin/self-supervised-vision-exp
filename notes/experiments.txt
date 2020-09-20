@@ -48,3 +48,14 @@ Use my encoder instead of torchvision and fastai head instead of single linear l
 
 Takeaways:
 -Turning down dropout did succeed in allowing us to fit the training set, but we still don't learn much on the validation set. Could try tweaking that parameter a bit.
+
+V4
+--
+Summary:
+First full run with s01 rather than nb. Used randomly initialized mobilenet encoder and fastai head with slightly higher dropout (p=.4). Also added all 3 random transforms with p=0.5.
+
+Takeaways:
+-Initially looked like it was learning nothing but after a couple dozen epochs it does seem like it's reliably staying above chance (though not by a whole lot). Still underfitting. Possibilities:
+    -much larger model (inception, resnext?)
+    -turn down dropout?
+    -turn down transform probability (these are applied to train set but not valid set, I'm thinking that might explain why val stats are a little better. Though I'm not sure whether removing it would actually be useful.).

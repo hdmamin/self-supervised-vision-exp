@@ -9,7 +9,8 @@ import torch.nn.functional as F
 from htools import log_cmd, immutify_defaults
 from img_wang.config import Config
 from img_wang.data import get_databunch
-from img_wang.models import SingleInputBinaryModel, Encoder, TorchvisionEncoder
+from img_wang.models import SingleInputBinaryModel, Encoder, \
+    TorchvisionEncoder, create_head_unpooled
 from img_wang.torch_utils import gpu_setup, n_out_channels
 from img_wang.utils import fire, next_model_dir
 from incendio.callbacks import MetricHistory, ModelCheckpoint, EarlyStopper
@@ -34,7 +35,7 @@ def train(# DATA PARAMETERS
           # MODEL PARAMETERS. Common head kwargs: lin_ftrs, ps
           enc='TorchvisionEncoder',
           enc_kwargs={'arch': 'mobilenet_v2', 'pretrained': True},
-          head='create_head',
+          head='create_head_unpooled',
           head_kwargs={},
           # TRAINING PARAMETERS
           epochs=100,
@@ -69,11 +70,9 @@ def train(# DATA PARAMETERS
 
     # Model.
     enc = eval(enc)(**enc_kwargs)
-    if head == 'create_head':
-        head_kwargs.update({'nf': n_out_channels(enc)*2, 'n_out': 1})
-    head = eval(head)(**head_kwargs)
+    f_out = getattr(enc, 'f_out', n_out_channels(enc))
+    head = eval(head)(f_in=f_out*2, **head_kwargs)
     net = SingleInputBinaryModel(enc, head)
-
 
     # Preparing for possibility of other loss functions.
     if loss == 'bce':
@@ -96,17 +95,10 @@ def train(# DATA PARAMETERS
         net.groups[0].freeze()
 
     # Create Trainer and fit.
-    # t = Trainer(net, dst, dsv, dlt, dlv, loss, mode='binary', out_dir=out_dir,
-    #             last_act=torch.sigmoid, callbacks=callbacks, metrics=metrics)
-    # t.fit(epochs, lrs, lr_mult)
-    # os.rename(Config.model_dir/'cmd.txt', out_dir/'cmd.txt')
-
-    # TODO: testing
-    print(net)
-    xb, yb = next(iter(dlt))
-    yh = net(xb)
-    print(yh.shape)
-    # TODO: testing
+    t = Trainer(net, dst, dsv, dlt, dlv, loss, mode='binary', out_dir=out_dir,
+                last_act=torch.sigmoid, callbacks=callbacks, metrics=metrics)
+    t.fit(epochs, lrs, lr_mult)
+    os.rename(Config.model_dir/'cmd.txt', out_dir/'cmd.txt')
 
 
 if __name__ == '__main__':

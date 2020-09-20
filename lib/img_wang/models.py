@@ -9,6 +9,7 @@ from torchvision import models as tvm
 import warnings
 
 from htools import valuecheck, identity
+from img_wang.torch_utils import n_out_channels
 from incendio.core import BaseModel
 from incendio.layers import Mish, ConvBlock, ResBlock
 from incendio.utils import init_bias_constant_
@@ -112,6 +113,7 @@ class Encoder(BaseModel):
                 *[ResBlock(c_in=fs[-1], activation=act, **res_kwargs)
                   for _ in range(res_blocks)]
             )
+        self.f_out = self.fs[-1]
 
     def forward(self, x):
         x = self.conv(x)                           # (bs, f[-1], new_h, new_w)
@@ -458,10 +460,10 @@ class SingleInputBinaryModel(BaseModel):
         pool = PoolFlatten(pool_type)
         # If not provided, try to infer number of output channels from encoder.
         # Probably not foolproof but for this use case I think it should work.
-        enc_out = enc_out or list(enc.parameters())[-1].shape[-1]
+        enc_out = enc_out or n_out_channels(enc)
         enc_mult = 2 if pool_type == 'cat' else 1
         # Cut off pool + flatten from fastai head because we already have that.
-        head = head or create_head(enc_out*enc_mult, 1, **head_kwargs)[2:]
+        head = head or create_head_unpooled(enc_out*enc_mult, 1, **head_kwargs)
         self.groups = nn.Sequential(enc, pool, head)
 
     def forward(self, x):
@@ -526,4 +528,9 @@ class ElementwiseMult(nn.Module):
 
     def forward(self, x1, x2):
         return x1 * x2
+
+
+def create_head_unpooled(f_in, n_out=1, lin_ftrs=None, ps=.5, **kwargs):
+    head = create_head(f_in, n_out=n_out, lin_ftrs=lin_ftrs, ps=ps, **kwargs)
+    return head[2:]
 

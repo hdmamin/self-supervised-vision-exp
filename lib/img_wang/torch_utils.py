@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import random
 import torch
+import warnings
 
 from htools import lmap
 from incendio.core import DEVICE
@@ -80,8 +81,8 @@ def reproducible(seed=1, verbose=True):
 
 def gpu_setup(make_reproducible=True, seed=1, verbose=1):
     if make_reproducible: reproducible(seed, verbose)
-    assert torch.cuda.is_available(), 'Cuda not available'
-    assert DEVICE.type == 'cuda'
+    if not torch.cuda.is_available(): warnings.warn('Cuda not available.')
+    if DEVICE.type != 'cuda': warnings.warn('Incendio device is not cuda.')
 
 
 def flip_tensor(x, dim=-1):
