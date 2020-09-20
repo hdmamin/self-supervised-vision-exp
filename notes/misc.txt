@@ -249,4 +249,4 @@ pin_memory experiments
 -------
 S01 error (I think my auto calculation of encoder output dim isn't working correctly):
 
-'RuntimeError: non-empty 3D or 4D (batch mode) tensor expected for input
+RuntimeError: non-empty 3D or 4D (batch mode) tensor expected for input

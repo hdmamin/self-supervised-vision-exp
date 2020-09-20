@@ -93,13 +93,20 @@ def train(# DATA PARAMETERS
                           'gradual unfreezing.')
             freeze_enc = True
     if freeze_enc:
-        net.head.freeze()
+        net.groups[0].freeze()
 
     # Create Trainer and fit.
-    t = Trainer(net, dst, dsv, dlt, dlv, loss, mode='binary', out_dir=out_dir,
-                last_act=torch.sigmoid, callbacks=callbacks, metrics=metrics)
-    t.fit(epochs, lrs, lr_mult)
-    os.rename(Config.model_dir/'cmd.txt', out_dir/'cmd.txt')
+    # t = Trainer(net, dst, dsv, dlt, dlv, loss, mode='binary', out_dir=out_dir,
+    #             last_act=torch.sigmoid, callbacks=callbacks, metrics=metrics)
+    # t.fit(epochs, lrs, lr_mult)
+    # os.rename(Config.model_dir/'cmd.txt', out_dir/'cmd.txt')
+
+    # TODO: testing
+    print(net)
+    xb, yb = next(iter(dlt))
+    yh = net(xb)
+    print(yh.shape)
+    # TODO: testing
 
 
 if __name__ == '__main__':
