@@ -18,7 +18,7 @@ from incendio.core import Trainer
 from incendio.metrics import mean_soft_prediction, std_soft_prediction
 
 
-@log_cmd(str(Config.model_dir/'cmd.txt'))
+@log_cmd(str(Config.model_dir/'cmd.txt'), 'w')
 @immutify_defaults
 def train(# DATA PARAMETERS
           bs=128,

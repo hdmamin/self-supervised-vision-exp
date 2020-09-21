@@ -318,9 +318,17 @@ Plans: Examine results of training runs so far to try to form a strategy for nex
 
 9/19/20
 -------
-Progress: 
+Progress: Read up a bit on different torchvision model architectures to see what bigger/better alternatives to mobilenet we have there. Updated TorchvisionEncoder to work with several different model families (realized only mobilenet and densenet use the 'features' child name. We now support mobilenet, densenet, resnet, and resnext variants). Wrote docs for n_out_channels(). V5 training run to try to address v4's underfitting.
 
-Plans: 
+Plans: Examine V5 training run. Start considering how supervised training will work (i.e. can I reuse s01?). Start working on adapting s01, or writing a new script if necessary.
+
+9/20/20
+-------
+Progress:
+
+Plans:
+
+
 
 
 

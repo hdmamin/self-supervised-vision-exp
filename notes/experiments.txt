@@ -59,3 +59,17 @@ Takeaways:
     -much larger model (inception, resnext?)
     -turn down dropout?
     -turn down transform probability (these are applied to train set but not valid set, I'm thinking that might explain why val stats are a little better. Though I'm not sure whether removing it would actually be useful.).
+
+V5
+--
+Summary:
+Use bigger model (resnext) and turned down augmentation and dropout to try to address V4's underfitting.
+
+Approximate Stats:
+GPU Memory Usage: 5,913/8,126 MB
+GPU Utilization: mostly at 99%, sometimes drops to 50% but it's pretty brief
+CPU Memory: up to ~3,630/30,147 MB (initially thought there was a memory leak since this seemed to keep increasing, but I think we're okay. Not sure exactly what was happening.)
+Epoch time (train): ~70s
+
+Takeaways:
+-

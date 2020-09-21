@@ -123,6 +123,23 @@ def random_noise(x, mean=0, std=1, min_val=0, max_val=1):
 
 
 def n_out_channels(model):
+    """Try to guess number of output channels of a CNN encoder model. Not sure
+    how well this logic holds up so I suspect it could lead to bugs if not used
+    carefully. I already know it doesn't work on fastai's classification head,
+    so we can't use it on the whole encoder-decoder model - just the encoder.
+
+    Parameters
+    ----------
+    model: nn.Module
+        Model where last layer is Conv2d (or BatchNorm2d) following a conv
+        layer.
+
+    Returns
+    -------
+    int: Number of output channels. In other words, if we pool and flatten,
+    we'll get a shape like (bs, {return_value}). If we use concat pooling,
+    {return_value} will need to be multiplied by 2.
+    """
     return list(model.parameters())[-1].shape[-1]
 
 

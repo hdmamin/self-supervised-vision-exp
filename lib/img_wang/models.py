@@ -160,7 +160,14 @@ class TorchvisionEncoder(BaseModel):
         """
         super().__init__()
         model = getattr(tvm, arch)(pretrained=pretrained, **kwargs)
-        self.model = dict(model.named_children())['features']
+        try:
+            self.model = dict(model.named_children())['features']
+        except KeyError:
+            if 'resnet' in arch or 'resnext' in arch:
+                self.model = nn.Sequential(*list(model.children())[:-2])
+            else:
+                raise ValueError('Don\'t know how to automatically select '
+                                 'layers for this architecture')
 
     def forward(self, x):
         """We return features only so this should have a shape like
