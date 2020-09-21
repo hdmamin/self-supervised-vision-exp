@@ -320,7 +320,7 @@ Plans: Examine results of training runs so far to try to form a strategy for nex
 -------
 Progress: Read up a bit on different torchvision model architectures to see what bigger/better alternatives to mobilenet we have there. Updated TorchvisionEncoder to work with several different model families (realized only mobilenet and densenet use the 'features' child name. We now support mobilenet, densenet, resnet, and resnext variants). Wrote docs for n_out_channels(). V5 training run to try to address v4's underfitting.
 
-Plans: Examine V5 training run. Start considering how supervised training will work (i.e. can I reuse s01?). Start working on adapting s01, or writing a new script if necessary.
+Plans: Examine V5 training run. Start considering how supervised training will work (i.e. can I reuse s01?). Start working on adapting s01, or writing a new script if necessary. Update s01 earlystopper callback to allow using val_acc instead of val_loss.
 
 9/20/20
 -------
@@ -331,6 +331,4 @@ Plans:
 
 
 
-
-python bin/s01-train-unsup-single-input.py --flip_horiz_p .5 --flip_vert_p .2 --rand_noise_p 0 --enc_kwargs "{arch: resnext-50-32x4d, pretrained: False}" --head_kwargs "{ps: .2}" --lrs 1e-3
 
