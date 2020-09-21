@@ -312,7 +312,7 @@ python bin/s01-train-unsup-single-input.py --global_rand_p .5 --enc_kwargs "{pre
 
 9/18/20
 -------
-Progress: Found and fixed issue from yesterday (s01 was constructing head before initializing overall model so I was losing the part where I chopped off the pooling layer and it was attempting to pool again after my manually added pooling layer). Wrote wrapper to automatically chop off these layers. Added attribute to my encoder to store last output dim and updated s01 to check for this before using n_channels_out(). Launched training run v4.
+Progress: Found and fixed issue from yesterday (s01 was constructing head before initializing overall model so I was losing the part where I chopped off the pooling layer and it was attempting to pool again after my manually added pooling layer). Wrote wrapper to automatically chop off these layers. Added attribute to my encoder to store last output dim and updated s01 to check for this before using n_channels_out(). Launched training run v4. Updated gpu_setup() to throw warnings instead of errors because we want this to work on cpu too.
 
 Plans: Examine results of training runs so far to try to form a strategy for next few training runs. Launch another one (maybe using my encoder since that showed some promise, or try a huge torchvision model to see if that's a promising knob to adjust). Should first investigate my encoder's model size/# of params vs. mobilenet. Consider doing some planning to timebox experiments for the unsupervised model - at some point I need to try transferring the weights, which is basically the whole point.
 
@@ -324,4 +324,5 @@ Plans:
 
 
 
+python bin/s01-train-unsup-single-input.py --flip_horiz_p .5 --flip_vert_p .2 --rand_noise_p 0 --enc_kwargs "{arch: resnext-50-32x4d, pretrained: False}" --head_kwargs "{ps: .2}" --lrs 1e-3
 

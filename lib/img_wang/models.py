@@ -151,7 +151,9 @@ class TorchvisionEncoder(BaseModel):
         Parameters
         ----------
         arch: str
-            Name of architecture to use. See options:
+            Name of architecture to use. A few bigger examples:
+            resnext-50-32x4d, resnext101_32x8d (HUGE)
+            See all options:
             https://pytorch.org/docs/stable/torchvision/models.html
         kwargs: any
             Addition kwargs will be forwarded to the model constructor.
