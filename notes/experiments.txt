@@ -72,4 +72,27 @@ CPU Memory: up to ~3,630/30,147 MB (initially thought there was a memory leak si
 Epoch time (train): ~70s
 
 Takeaways:
+-Overfittting now.
+
+V6
+--
+Summary:
+Now that v5 overfits, try turning up dropout and data augmentation.
+
+Takeaways:
+-Performed very slightly better, maybe not significantly so. Still overfitting.
+-Could maybe increase early stopping patience.
+
+V7
+--
+Summary:
+Bump up to even bigger model, turn up random noise augmentation, and increase stopping patience in hopes that if we just keep training for a while, val loss might break through and improve again. We still haven't quite gotten to a place where even train performance is human level (though v6 is starting to get in the ballpark), so I'd like to try one last experiment with an enormous model and see if that helps at all. Regardless, I think it's getting to be time to wrap up this portion of the experiment.
+
+Approximate Stats:
+GPU Memory Usage: 4,667/8,126 MB
+GPU Utilization: fluctuates 9-98% but doesn't stay low for long
+CPU Memory: ~2720 MB
+Epoch time (train): ~4:50
+
+Takeaways:
 -

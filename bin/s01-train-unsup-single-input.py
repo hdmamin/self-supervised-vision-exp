@@ -45,6 +45,7 @@ def train(# DATA PARAMETERS
           gradual_unfreeze=False,
           loss='bce',
           patience=8,
+          monitor='loss',
           # BOOKKEEPING PARAMETERS
           pre=''):
     """Fit model on unsupervised task where model accepts a single input.
@@ -84,7 +85,7 @@ def train(# DATA PARAMETERS
     callbacks = [MetricHistory(),
                  CometCallbackWithGrads('img_wang'),
                  ModelCheckpoint(),
-                 EarlyStopper('loss', 'min', patience=patience)]
+                 EarlyStopper(monitor, 'min', patience=patience)]
     if gradual_unfreeze:
         callbacks.append(ModelUnfreezer({1: 3}, 'groups', 'layers'))
         if not freeze_enc:

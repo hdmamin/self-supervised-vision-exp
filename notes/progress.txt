@@ -324,9 +324,9 @@ Plans: Examine V5 training run. Start considering how supervised training will w
 
 9/20/20
 -------
-Progress:
+Progress: Examined v5 and v6 training runs. Added `numel` method to incendio base model. Examined model sizes (param counts, sys size, GPU memory) of different resnext arches. Launched v7 with giant resnext model and higher random noise probability. Started porting lightning supervised datamodule to dataset that will work with my get_databunch function (think I can repurpose s01 for supervised training). Added option in s01 to use a different metric than loss as an early stopping criteria.
 
-Plans:
+Plans: Assess results of v7. Finish porting supervised dataset. Start updating get_databunch function and/or s01 to accomodate it.
 
 
 

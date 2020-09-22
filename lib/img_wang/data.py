@@ -7,6 +7,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 import torch
 from torch.utils.data import Dataset, DataLoader
+from torchvision import transforms
 import warnings
 
 from htools import Args, valuecheck, BasicPipeline, identity, func_name
@@ -441,9 +442,9 @@ class PatchworkDataset(Dataset):
             RandomTransform(partial(flip_tensor, dim=-2), flip_vert_p),
             RandomTransform(partial(random_noise, std=noise_std), rand_noise_p)
         ) if flip_horiz_p + flip_vert_p + rand_noise_p > 0 else identity
+	def __len__(self):
 
-    def __len__(self):
-        return len(self.paths)
+	return len(self.paths)
 
     def __getitem__(self, i):
         """
@@ -501,6 +502,39 @@ class PatchworkDataset(Dataset):
                        slice(top_y, top_y + self.patch_h),
                        slice(left_x, left_x + self.patch_w))
         return img_targ, coords_targ, img_src, coords_src
+
+
+class SupervisedDataset(Dataset):
+
+    def __init__(self, dir_=None, paths=None, shape=(128, 128), tfms='train'):
+        """
+        tfms: list[transform]
+        """
+        if not dir_ and not paths:
+            raise ValueError('One of dir_ or paths should be non-null.')
+
+        self.root = paths or get_image_files(root)
+	if tfms == 'train':
+            self.tfms = transforms.Compose(
+                [transforms.RandomResizedCrop(shape, (.9, 1.0)),
+                 transforms.RandomHorizontalFlip(),
+                 transforms.RandomRotation(10),
+                 transforms.ToTensor()]
+            )
+	elif tfms == 'val':
+            self.tfms = transforms.Compose(
+		[transforms.Resize(shape),
+                 transforms.ToTensor()]
+            )
+	elif isintance(tfms, (list, tuple)):
+            self.tfms = transforms.compose(tfms)
+
+    def setup(self, stage=''):
+        self.ds_train = ImageFolder(self.root / 'train', self.train_tfms)
+        self.ds_val.classes = self.ds_train.classes
+        self.ds_val.class_to_idx = self.ds_train.class_to_idx
+        self.dl_train = DataLoader(self.ds_train, self.bs, shuffle=True)
+        self.dl_val = DataLoader(self.ds_val, self.bs)
 
 
 class RandomTransform:
