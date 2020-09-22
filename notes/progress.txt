@@ -318,7 +318,7 @@ Plans: Examine results of training runs so far to try to form a strategy for nex
 
 9/19/20
 -------
-Progress: Read up a bit on different torchvision model architectures to see what bigger/better alternatives to mobilenet we have there. Updated TorchvisionEncoder to work with several different model families (realized only mobilenet and densenet use the 'features' child name. We now support mobilenet, densenet, resnet, and resnext variants). Wrote docs for n_out_channels(). V5 training run to try to address v4's underfitting.
+Progress: Read up a bit on different torchvision model architectures to see what bigger/better alternatives to mobilenet we have there. Updated TorchvisionEncoder to work with several different model families (realized only mobilenet and densenet use the 'features' child name. We now support mobilenet, densenet, resnet, and resnext variants). Wrote docs for n_out_channels(). V5 training run to try to address v4's underfitting. Snuck in another v6 run trying to address v5's overfitting.
 
 Plans: Examine V5 training run. Start considering how supervised training will work (i.e. can I reuse s01?). Start working on adapting s01, or writing a new script if necessary. Update s01 earlystopper callback to allow using val_acc instead of val_loss.
 
@@ -327,6 +327,12 @@ Plans: Examine V5 training run. Start considering how supervised training will w
 Progress: Examined v5 and v6 training runs. Added `numel` method to incendio base model. Examined model sizes (param counts, sys size, GPU memory) of different resnext arches. Launched v7 with giant resnext model and higher random noise probability. Started porting lightning supervised datamodule to dataset that will work with my get_databunch function (think I can repurpose s01 for supervised training). Added option in s01 to use a different metric than loss as an early stopping criteria.
 
 Plans: Assess results of v7. Finish porting supervised dataset. Start updating get_databunch function and/or s01 to accomodate it.
+
+9/21/20
+-------
+Progress:
+
+Plans:
 
 
 
