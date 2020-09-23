@@ -4,8 +4,10 @@ from fastai2.data.transforms import get_image_files
 from fastai2.vision.core import load_image
 from functools import partial
 import numpy as np
+from pathlib import Path
 from sklearn.model_selection import train_test_split
 import torch
+from torchvision.datasets import ImageFolder
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import warnings
@@ -442,9 +444,9 @@ class PatchworkDataset(Dataset):
             RandomTransform(partial(flip_tensor, dim=-2), flip_vert_p),
             RandomTransform(partial(random_noise, std=noise_std), rand_noise_p)
         ) if flip_horiz_p + flip_vert_p + rand_noise_p > 0 else identity
-	def __len__(self):
 
-	return len(self.paths)
+    def __len__(self):
+        return len(self.paths)
 
     def __getitem__(self, i):
         """
@@ -504,37 +506,43 @@ class PatchworkDataset(Dataset):
         return img_targ, coords_targ, img_src, coords_src
 
 
-class SupervisedDataset(Dataset):
+class SupervisedDataset(ImageFolder):
 
-    def __init__(self, dir_=None, paths=None, shape=(128, 128), tfms='train'):
-        """
+    def __init__(self, dir_=None, shape=(128, 128), tfms='train',
+                 max_len=None, random=True):
+        """ImageFolder dataset with some default transforms for train and val
+        sets. Also supports subsetting using `max_len` attr in constructor
+        (similar to other datasets, we sometimes don't want to use all files in
+        a directory.
+
+        Parameters
+        ----------
+        dir_: str or Path
+        shape: tuple[int]
         tfms: list[transform]
+        max_len: int or None
+        random: bool
+            Only used if max_len is not None. This determines if our subset is
+            selected randomly or just slices off the first n samples.
         """
-        if not dir_ and not paths:
-            raise ValueError('One of dir_ or paths should be non-null.')
-
-        self.root = paths or get_image_files(root)
-	if tfms == 'train':
-            self.tfms = transforms.Compose(
+        if tfms == 'train':
+            tfms = transforms.Compose(
                 [transforms.RandomResizedCrop(shape, (.9, 1.0)),
                  transforms.RandomHorizontalFlip(),
                  transforms.RandomRotation(10),
                  transforms.ToTensor()]
             )
-	elif tfms == 'val':
-            self.tfms = transforms.Compose(
-		[transforms.Resize(shape),
+        elif tfms == 'val':
+            tfms = transforms.Compose(
+                [transforms.Resize(shape),
                  transforms.ToTensor()]
             )
-	elif isintance(tfms, (list, tuple)):
+        elif isinstance(tfms, (list, tuple)):
             self.tfms = transforms.compose(tfms)
-
-    def setup(self, stage=''):
-        self.ds_train = ImageFolder(self.root / 'train', self.train_tfms)
-        self.ds_val.classes = self.ds_train.classes
-        self.ds_val.class_to_idx = self.ds_train.class_to_idx
-        self.dl_train = DataLoader(self.ds_train, self.bs, shuffle=True)
-        self.dl_val = DataLoader(self.ds_val, self.bs)
+        super().__init__(dir_, tfms)
+        if max_len:
+            # Tried overwriting self but it's not trivial.
+            self.samples = ds_subset(self, max_len, random=random).samples
 
 
 class RandomTransform:
@@ -573,12 +581,13 @@ def patchwork_collate_fn(rows):
 
 
 @valuecheck
-def get_databunch(dir_=None, paths=None,
-                  mode:('mixup', 'scale', 'quadrant', 'patchwork')='mixup',
-                  bs=32, valid_bs_mult=1, train_pct=.9, shuffle_train=True,
-                  drop_last=True, random_state=0, max_train_len=None,
-                  max_val_len=None, num_workers=8, pin_memory=False,
-                  collate_custom=False, **ds_kwargs):
+def get_databunch(
+    dir_=None, paths=None,
+    mode:('mixup', 'scale', 'quadrant', 'patchwork', 'supervised')='mixup',
+    bs=32, valid_bs_mult=1, train_pct=.9, shuffle_train=True, drop_last=True,
+    random_state=0, max_train_len=None, max_val_len=None, num_workers=8,
+    pin_memory=False, collate_custom=False, **ds_kwargs
+):
     """Wrapper to quickly get train and validation datasets and dataloaders
     from a directory of unlabeled images. This isn't actually a fastai
     databunch, but in practice what it achieves is sort of similar and I
@@ -648,12 +657,17 @@ def get_databunch(dir_=None, paths=None,
         warnings.warn('Sometimes get some weird behavior with custom '
                       'collate_fn when num_workers > 0.')
 
-    paths = paths or get_image_files(dir_)
-    train, val = train_test_split(paths, train_size=train_pct,
-                                  random_state=random_state)
     DS = eval(mode.title() + 'Dataset')
-    dst = DS(paths=train[:max_train_len], **ds_kwargs)
-    dsv = DS(paths=val[:max_val_len], **ds_kwargs)
+    dir_ = Path(dir_)
+    if mode == 'supervised':
+        dst = DS(dir_/'train', max_len=max_train_len, **ds_kwargs)
+        dsv = DS(dir_/'val', max_len=max_val_len, **ds_kwargs, tfms='val')
+    else:
+        paths = paths or get_image_files(dir_)
+        train, val = train_test_split(paths, train_size=train_pct,
+                                      random_state=random_state)
+        dst = DS(paths=train[:max_train_len], **ds_kwargs)
+        dsv = DS(paths=val[:max_val_len], **ds_kwargs)
 
     collate_fn = eval(f'{mode}_collate_fn') if collate_custom else None
     dlt = DataLoader(dst, bs, drop_last=drop_last, shuffle=shuffle_train,
@@ -725,6 +739,8 @@ def trunc_norm_like(*args, min=0, max=1):
     Parameters
     ----------
     args: torch.tensor
+    min: int or float
+    max: int or float
 
     Returns
     -------

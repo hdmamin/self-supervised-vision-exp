@@ -330,9 +330,17 @@ Plans: Assess results of v7. Finish porting supervised dataset. Start updating g
 
 9/21/20
 -------
+Progress: Examined v7 run and wrote some notes. Finished supervised dataset. Updated get_databunch to work with it. Tested this in notebook and seems to work as expected. Fiddled around a bit trying to overwrite `self` to get subsetting functionality working but ultimately realized it was possible to change the `samples` attr.
+
+Plans: Update s01 to accomodate supervised training.
+
+9/22/20
+-------
 Progress:
 
 Plans:
+
+
 
 
 
