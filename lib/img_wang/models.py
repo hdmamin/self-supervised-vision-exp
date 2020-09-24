@@ -543,3 +543,26 @@ def create_head_unpooled(f_in, n_out=1, lin_ftrs=None, ps=.5, **kwargs):
     head = create_head(f_in, n_out=n_out, lin_ftrs=lin_ftrs, ps=ps, **kwargs)
     return head[2:]
 
+
+def load_encoder(net, enc_version):
+    """Load weights from a pre-trained encoder. This relies on the setup we use
+    in SingleInputBinaryModel where group[0] is the encoder.
+
+    Parameters
+    ----------
+    net: nn.Module
+        A randomly initialized network.
+    enc_version: str
+        Name of the training run to load. The architecture must match `net`.
+
+    Returns
+    -------
+    nn.Module: net with pretrained encoder weights. Head weights are
+    unaffected.
+    """
+    state = torch.load(f'data/models/{enc_version}/trainer.pkl')
+    enc_state = {k: v for k, v in state['model'].items()
+                 if k.split('.')[1] == '0'}
+    net.load_state_dict(enc_state, strict=False)
+    return net
+
