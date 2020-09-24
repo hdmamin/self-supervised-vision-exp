@@ -336,11 +336,14 @@ Plans: Update s01 to accomodate supervised training.
 
 9/23/20
 -------
-Progress: Wrote function to load encoder weights after much debugging (might need to make this a little more generalizable at some point but fine for now). Briefly started updating s01 for supervised training.
+Progress: Wrote function to load encoder weights after much debugging (might need to make this a little more generalizable at some point but fine for now). Briefly started updating s01 for supervised training. Also updated incendio modelcheckpoint callback to allow customizing file names.
 
 Plans: Continue updating s01 for supervised training.
 
 9/24/20
 -------
+Progress:
+
+Plans:
 
 
