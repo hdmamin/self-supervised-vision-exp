@@ -38,6 +38,8 @@ def train(# DATA PARAMETERS
           head='create_head_unpooled',
           head_kwargs={},
           # TRAINING PARAMETERS
+          mode='unsupervised',
+          ssl_weight_dir=None,
           epochs=100,
           lrs=(1e-5, 1e-5, 1e-4),
           lr_mult=1.0,
@@ -71,6 +73,9 @@ def train(# DATA PARAMETERS
 
     # Model.
     enc = eval(enc)(**enc_kwargs)
+    # if ssl_weight_dir:
+        # TODO: check how to get weights for just encoder.
+        # enc.load_state_dict(state['model'])
     f_out = getattr(enc, 'f_out', n_out_channels(enc))
     head = eval(head)(f_in=f_out*2, **head_kwargs)
     net = SingleInputBinaryModel(enc, head)
