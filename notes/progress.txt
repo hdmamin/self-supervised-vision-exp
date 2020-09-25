@@ -342,7 +342,7 @@ Plans: Continue updating s01 for supervised training.
 
 9/24/20
 -------
-Progress:
+Progress: Updated s01 to properly handle training output directory for supervised learning and loading encoder weights. Updated next_model_version and next_model_dir functions to work with different model dirs and updated docstrings.
 
 Plans:
 
