@@ -8,4 +8,4 @@ class Config:
     val_dir = img_dir/'val'
     comet_exp = 'img-wang'
     model_dir = Path('data/models')
-
+    sup_model_dir = Path('data/supervised_models')

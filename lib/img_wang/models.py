@@ -554,6 +554,7 @@ def load_encoder(net, enc_version):
         A randomly initialized network.
     enc_version: str
         Name of the training run to load. The architecture must match `net`.
+        Example: 'v7'.
 
     Returns
     -------

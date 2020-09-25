@@ -1,19 +1,20 @@
 # Import comet before torch/fastai, sometimes throws error otherwise.
 from img_wang.callbacks import CometCallbackWithGrads
-from fastai2.vision.learner import create_head
 import os
 from sklearn.metrics import accuracy_score
 import torch
 import torch.nn.functional as F
+import warnings
 
 from htools import log_cmd, immutify_defaults
 from img_wang.config import Config
 from img_wang.data import get_databunch
 from img_wang.models import SingleInputBinaryModel, Encoder, \
-    TorchvisionEncoder, create_head_unpooled
+    TorchvisionEncoder, create_head_unpooled, load_encoder
 from img_wang.torch_utils import gpu_setup, n_out_channels
 from img_wang.utils import fire, next_model_dir
-from incendio.callbacks import MetricHistory, ModelCheckpoint, EarlyStopper
+from incendio.callbacks import MetricHistory, ModelCheckpoint, EarlyStopper, \
+    ModelUnfreezer
 from incendio.core import Trainer
 from incendio.metrics import mean_soft_prediction, std_soft_prediction
 
@@ -34,12 +35,11 @@ def train(# DATA PARAMETERS
           noise_std=0.05,
           # MODEL PARAMETERS. Common head kwargs: lin_ftrs, ps
           enc='TorchvisionEncoder',
-          enc_kwargs={'arch': 'mobilenet_v2', 'pretrained': True},
+          enc_kwargs={'arch': 'mobilenet_v2', 'pretrained': False},
           head='create_head_unpooled',
           head_kwargs={},
           # TRAINING PARAMETERS
-          mode='unsupervised',
-          ssl_weight_dir=None,
+          ssl_weight_version=None,
           epochs=100,
           lrs=(1e-5, 1e-5, 1e-4),
           lr_mult=1.0,
@@ -58,34 +58,41 @@ def train(# DATA PARAMETERS
     gpu_setup()
     if global_rand_p is not None:
         flip_horiz_p = flip_vert_p = rand_noise_p = global_rand_p
-    dst, dsv, dlt, dlv = get_databunch(Config.unsup_dir,
-                                       mode=ds_mode,
-                                       bs=bs,
-                                       max_train_len=subset,
-                                       max_val_len=subset,
-                                       num_workers=num_workers,
-                                       pct_pos=pct_pos,
-                                       debug_mode=debug,
-                                       flip_horiz_p=flip_horiz_p,
-                                       flip_vert_p=flip_vert_p,
-                                       rand_noise_p=rand_noise_p,
-                                       noise_std=noise_std)
+    dst, dsv, dlt, dlv = get_databunch(
+        Config.img_dir if ds_mode == 'supervised' else Config.unsup_dir,
+        mode=ds_mode,
+        bs=bs,
+        max_train_len=subset,
+        max_val_len=subset,
+        num_workers=num_workers,
+        pct_pos=pct_pos,
+        debug_mode=debug,
+        flip_horiz_p=flip_horiz_p,
+        flip_vert_p=flip_vert_p,
+        rand_noise_p=rand_noise_p,
+        noise_std=noise_std
+    )
 
     # Model.
     enc = eval(enc)(**enc_kwargs)
-    # if ssl_weight_dir:
-        # TODO: check how to get weights for just encoder.
-        # enc.load_state_dict(state['model'])
     f_out = getattr(enc, 'f_out', n_out_channels(enc))
     head = eval(head)(f_in=f_out*2, **head_kwargs)
     net = SingleInputBinaryModel(enc, head)
+    if ssl_weight_version: net = load_encoder(net, ssl_weight_version)
 
     # Preparing for possibility of other loss functions.
     if loss == 'bce':
         loss = F.binary_cross_entropy_with_logits
     else:
         raise NotImplementedError('Update code to allow other loss functions.')
-    out_dir = Config.model_dir/pre if pre else next_model_dir(new=True)
+
+    # Configure output directory.
+    model_parent_dir = Config.sup_model_dir if ds_mode == 'supervised' \
+        else Config.model_dir
+    out_dir = model_parent_dir/pre if pre else next_model_dir(True,
+                                                              model_parent_dir)
+
+    # Metrics and callbacks.
     metrics = [mean_soft_prediction, std_soft_prediction, accuracy_score]
     callbacks = [MetricHistory(),
                  CometCallbackWithGrads('img_wang'),

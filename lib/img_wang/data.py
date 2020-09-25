@@ -600,7 +600,8 @@ def get_databunch(
     Parameters
     ----------
     dir_: str or Path
-        Directory of images for unsupervised learning.
+        Directory of images for unsupervised learning or parent directory
+        containing train and val dirs for supervised learning.
     paths: tuple[str or Path]
         Instead of passing in dir_, you can pass in a list of file paths. This
         makes it pretty easy to create subsets, though in practice I found it

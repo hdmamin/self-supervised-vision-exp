@@ -1,9 +1,11 @@
 import fire
+from pathlib import Path
 
 from img_wang.config import Config
 
 
-def next_model_version(new=True, skip_names=('tmp')):
+def next_model_version(new=True, model_dir=Config.model_dir,
+                       skip_names=('tmp',)):
     """Get model version number (e.g. 4 for version v4). See `next_model_dir`
     for more explanation on how this is used.
 
@@ -13,17 +15,22 @@ def next_model_version(new=True, skip_names=('tmp')):
         If True, get the version number of a completely new model. If False,
         get the highest existing number (use this when `log_cmd` has created
         a subdir in anticipation of an upcoming training run.
+    model_dir: str or Path
+        Directory containing model subdirectories named v1, v2, v3, etc.
+    skip_names: Iterable[str]
+        Subdirectory names to ignore inside model_dir. For instance, I often
+        use a models/tmp dir for quick testing.
 
     Returns
     -------
     int: Model version number. Differs depending on choice of `new`.
     """
-    return max([int(p.stem.strip('v')) for p in Config.model_dir.iterdir()
+    return max([int(p.stem.strip('v')) for p in model_dir.iterdir()
                 if p.is_dir() and p.stem not in skip_names] + [-1]) \
            + (1 if new else 0)
 
 
-def next_model_dir(new=True):
+def next_model_dir(new=True, model_dir=Config.model_dir):
     """Get the name of the model subdirectory (e.g. data/models/v4) to save
     training artifacts in. This can be the highest existing model number (for
     the case where our `log_cmd` decorator has created a new directory in
@@ -36,12 +43,14 @@ def next_model_dir(new=True):
     new: bool
         If True, get the name of a completely new model subdir. If False,
         get the name of the existing subdir with the highest model version.
+    model_dir: str or Path
+        Directory containing model subdirectories named v1, v2, v3, etc.
 
     Returns
     -------
     Path: Subdirectory inside data/models which may or may not exist yet.
     """
-    return Config.model_dir/f'v{next_model_version(new)}'
+    return Path(model_dir)/f'v{next_model_version(new, model_dir)}'
 
 
 def Display(lines, out):
