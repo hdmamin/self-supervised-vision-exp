@@ -509,7 +509,7 @@ class PatchworkDataset(Dataset):
 class SupervisedDataset(ImageFolder):
 
     def __init__(self, dir_=None, shape=(128, 128), tfms='train',
-                 max_len=None, random=True):
+                 max_len=None, random=True, **kwargs):
         """ImageFolder dataset with some default transforms for train and val
         sets. Also supports subsetting using `max_len` attr in constructor
         (similar to other datasets, we sometimes don't want to use all files in
@@ -524,6 +524,9 @@ class SupervisedDataset(ImageFolder):
         random: bool
             Only used if max_len is not None. This determines if our subset is
             selected randomly or just slices off the first n samples.
+        kwargs: any
+            Makes it easier to swap this in when using get_databunch function.
+            Extra kwargs are ignored.
         """
         if tfms == 'train':
             tfms = transforms.Compose(
@@ -543,6 +546,10 @@ class SupervisedDataset(ImageFolder):
         if max_len:
             # Tried overwriting self but it's not trivial.
             self.samples = ds_subset(self, max_len, random=random).samples
+
+    def __getitem__(self, i):
+        x, y = super().__getitem__(i)
+        return x, torch.tensor([y], dtype=torch.float)
 
 
 class RandomTransform:

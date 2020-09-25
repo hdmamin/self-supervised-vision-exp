@@ -19,7 +19,7 @@ from incendio.core import Trainer
 from incendio.metrics import mean_soft_prediction, std_soft_prediction
 
 
-@log_cmd(str(Config.model_dir/'cmd.txt'), 'w')
+@log_cmd(str(Config.data_dir/'cmd.txt'), 'w')
 @immutify_defaults
 def train(# DATA PARAMETERS
           bs=128,
@@ -89,6 +89,7 @@ def train(# DATA PARAMETERS
     # Configure output directory.
     model_parent_dir = Config.sup_model_dir if ds_mode == 'supervised' \
         else Config.model_dir
+    os.makedirs(model_parent_dir, exist_ok=True)
     out_dir = model_parent_dir/pre if pre else next_model_dir(True,
                                                               model_parent_dir)
 
@@ -111,7 +112,7 @@ def train(# DATA PARAMETERS
     t = Trainer(net, dst, dsv, dlt, dlv, loss, mode='binary', out_dir=out_dir,
                 last_act=torch.sigmoid, callbacks=callbacks, metrics=metrics)
     t.fit(epochs, lrs, lr_mult)
-    os.rename(Config.model_dir/'cmd.txt', out_dir/'cmd.txt')
+    os.rename(Config.data_dir/'cmd.txt', out_dir/'cmd.txt')
 
 
 if __name__ == '__main__':

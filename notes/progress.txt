@@ -342,8 +342,15 @@ Plans: Continue updating s01 for supervised training.
 
 9/24/20
 -------
-Progress: Updated s01 to properly handle training output directory for supervised learning and loading encoder weights. Updated next_model_version and next_model_dir functions to work with different model dirs and updated docstrings.
+Progress: Updated s01 to properly handle training output directory for supervised learning and loading encoder weights. Updated next_model_version and next_model_dir functions to work with different model dirs and updated docstrings. Found and fixed issue with ImageFolder labels (wrong shape and dtype). Started training v0 supervised model but cut run short since I was getting enormous negative loss.
+
+Plans: Investigate potential causes of large negative loss (try manually calculating losses for a few batches in a notebook). Can also try some googling, a quick initial search did find a couple mentions of what sounds like a similar issue. Hopefully fix this and re-launch v0 (supervised task with random weights).
+
+9/25/20
+-------
+Progress:
 
 Plans:
+
 
 

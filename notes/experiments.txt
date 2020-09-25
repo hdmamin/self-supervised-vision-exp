@@ -99,3 +99,23 @@ Takeaways:
 -Best model was from epoch 42 and last epoch was 66 (0-indexed). Is my early stopping callback counting off by 1, or maybe it stops training before the end of epoch MetricPrinter callback is called?
 -This is the first model where I feel we really let the model reach high train acc and saw conclusive overfitting on val set.
 -Kind of unrelated to our task, but it's pretty weird that overfitting on the train set resulted in predicting more and more positives on the val sset. Not sure what would explain that.
+
+-----------------
+SUPERVISED MODELS
+-----------------
+
+V0
+--
+Summary:
+First full supervised training run. Use large resnext with random weights so we can compare to later runs with pretrained encoder weights.
+
+
+Approximate Stats:
+GPU Memory Usage: 4,667/8,126 MB
+GPU Utilization: fluctuates 10-98% but doesn't stay low for long
+CPU Memory: ~2630 MB
+Epoch time (train): ~10min
+
+Takeaways:
+-
+-Best model was from epoch 42 and last epoch was 66 (0-indexed). Is my early stopping callback counting off by 1, or maybe it stops training before the end of epoch MetricPrinter callback is called?
