@@ -3,6 +3,7 @@ from img_wang.callbacks import CometCallbackWithGrads
 import os
 from sklearn.metrics import accuracy_score
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import warnings
 
@@ -126,8 +127,12 @@ def train(# DATA PARAMETERS
         net.groups[0].freeze()
 
     # Create Trainer and fit.
-    t = Trainer(net, dst, dsv, dlt, dlv, loss, mode='binary', out_dir=out_dir,
-                last_act=torch.sigmoid, callbacks=callbacks, metrics=metrics)
+    t = Trainer(
+        net, dst, dsv, dlt, dlv, loss,
+        mode='multiclass' if ds_mode == 'supervised' else 'binary',
+        last_act=nn.Softmax(-1) if ds_mode == 'supervised' else torch.sigmoid,
+        out_dir=out_dir, callbacks=callbacks, metrics=metrics
+    )
     t.fit(epochs, lrs, lr_mult)
     os.rename(Config.data_dir/'cmd.txt', out_dir/'cmd.txt')
 

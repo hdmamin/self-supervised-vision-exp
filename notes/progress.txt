@@ -348,9 +348,14 @@ Plans: Investigate potential causes of large negative loss (try manually calcula
 
 9/25/20
 -------
-Progress: Found bug in supervised training setup: forgot to change default loss from BCE_with_logits to CE. Fixed that and related issues: make supervised model output 20 classes instead of 1 and remove imagefolder getitem override which changed shape and type of labels (added this previously because I was using wrong loss and followed its instructions to make things work; however, the values it output were obviously not what I was going for).
+Progress: Found bug in supervised training setup: forgot to change default loss from BCE_with_logits to CE. Fixed that and related issues: make supervised model output 20 classes instead of 1 and remove imagefolder getitem override which changed shape and type of labels (added this previously because I was using wrong loss and followed its instructions to make things work; however, the values it output were obviously not what I was going for). s01 also had wrong trainer last_act and mode in multiclass case so I fixed those. After a few tries, launched v0 and it seems to be running.
 
-Plans:
+Plans: Examine results of v0. Try training v1 w/ pretrained encoder weights.
 
+9/26/20
+-------
+Progress: 
+
+Plans: 
 
 

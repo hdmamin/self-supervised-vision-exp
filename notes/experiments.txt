@@ -109,12 +109,12 @@ V0
 Summary:
 First full supervised training run. Use large resnext with random weights so we can compare to later runs with pretrained encoder weights.
 
-
 Approximate Stats:
 GPU Memory Usage: 4,667/8,126 MB
 GPU Utilization: fluctuates 10-98% but doesn't stay low for long
-CPU Memory: ~2630 MB
+CPU Memory: ~3330 MB
 Epoch time (train): ~10min
 
 Takeaways:
--Massive negative loss, stopped training manually. Need to find bug.
+-First attempt had massive negative loss, stopped training manually. Fixed several bugs (mostly holdovers from assumption that script was for unsupervised task, particularly binary classification: wrong loss function, wrong # of output classes, wrong shape and dtype of labels, wrong trainer.last_act, wrong trainer.mode).
+
