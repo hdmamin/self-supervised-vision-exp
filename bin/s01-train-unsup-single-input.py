@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import warnings
 
-from htools import log_cmd, immutify_defaults
+from htools import log_cmd, immutify_defaults, debug
 from img_wang.config import Config
 from img_wang.data import get_databunch
 from img_wang.models import SingleInputBinaryModel, Encoder, \
@@ -22,6 +22,7 @@ from incendio.metrics import mean_soft_prediction, std_soft_prediction
 
 @log_cmd(str(Config.data_dir/'cmd.txt'), 'w')
 @immutify_defaults
+@debug
 def train(# DATA PARAMETERS
           bs=128,
           num_workers=8,

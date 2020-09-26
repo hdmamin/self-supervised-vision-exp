@@ -354,7 +354,7 @@ Plans: Examine results of v0. Try training v1 w/ pretrained encoder weights.
 
 9/26/20
 -------
-Progress: Examined results of v0 (okay on train set but useless on validation set). Launched run with pretrained encoder.
+Progress: Examined results of v0 (okay on train set but useless on validation set). Launched run with pretrained encoder. Added debug decorator to s01 to show all parameters at the time the script was called (this will be captured in trian.log and provides some extra info to complement cmd.txt: if script arguments or defaults change, they aren't shown in cmd.txt).
 
 Plans: 
 
