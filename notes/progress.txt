@@ -354,7 +354,7 @@ Plans: Examine results of v0. Try training v1 w/ pretrained encoder weights.
 
 9/26/20
 -------
-Progress: 
+Progress: Examined results of v0 (okay on train set but useless on validation set). Launched run with pretrained encoder.
 
 Plans: 
 
