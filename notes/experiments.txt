@@ -117,5 +117,4 @@ CPU Memory: ~2630 MB
 Epoch time (train): ~10min
 
 Takeaways:
--
--Best model was from epoch 42 and last epoch was 66 (0-indexed). Is my early stopping callback counting off by 1, or maybe it stops training before the end of epoch MetricPrinter callback is called?
+-Massive negative loss, stopped training manually. Need to find bug.

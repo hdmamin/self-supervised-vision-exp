@@ -547,10 +547,6 @@ class SupervisedDataset(ImageFolder):
             # Tried overwriting self but it's not trivial.
             self.samples = ds_subset(self, max_len, random=random).samples
 
-    def __getitem__(self, i):
-        x, y = super().__getitem__(i)
-        return x, torch.tensor([y], dtype=torch.float)
-
 
 class RandomTransform:
 

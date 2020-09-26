@@ -45,15 +45,27 @@ def train(# DATA PARAMETERS
           lr_mult=1.0,
           freeze_enc=False,
           gradual_unfreeze=False,
-          loss='bce',
+          loss='auto',
           patience=8,
           monitor='loss',
           # BOOKKEEPING PARAMETERS
           pre=''):
     """Fit model on unsupervised task where model accepts a single input.
+    Contrary to the name, this now supports supervised training as well.
+    Keeping the name since that's what all my cmd.txt files have.
 
     Parameters
     ----------
+
+    Examples
+    --------
+    python bin/s01-train-unsup-single-input.py \
+        --bs 64 \
+        --ds_mode supervised \
+        --enc_kwargs "{arch: resnext101_32x8d}" \
+        --head_kwargs "{ps: .2}" \
+        --ssl_weight_version v7 \
+        --patience 25
     """
     gpu_setup()
     if global_rand_p is not None:
@@ -73,18 +85,23 @@ def train(# DATA PARAMETERS
         noise_std=noise_std
     )
 
+    # Preparing for possibility of other loss functions.
+    if loss == 'auto':
+        if ds_mode == 'supervised':
+            loss = F.cross_entropy
+            head_kwargs['n_out'] = len(dst.classes)
+        else:
+            loss = F.binary_cross_entropy_with_logits
+            head_kwargs['n_out'] = 1
+    else:
+        raise NotImplementedError('Update code to allow other loss functions.')
+
     # Model.
     enc = eval(enc)(**enc_kwargs)
     f_out = getattr(enc, 'f_out', n_out_channels(enc))
     head = eval(head)(f_in=f_out*2, **head_kwargs)
     net = SingleInputBinaryModel(enc, head)
     if ssl_weight_version: net = load_encoder(net, ssl_weight_version)
-
-    # Preparing for possibility of other loss functions.
-    if loss == 'bce':
-        loss = F.binary_cross_entropy_with_logits
-    else:
-        raise NotImplementedError('Update code to allow other loss functions.')
 
     # Configure output directory.
     model_parent_dir = Config.sup_model_dir if ds_mode == 'supervised' \

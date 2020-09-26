@@ -472,7 +472,7 @@ class SingleInputBinaryModel(BaseModel):
         enc_out = enc_out or n_out_channels(enc)
         enc_mult = 2 if pool_type == 'cat' else 1
         # Cut off pool + flatten from fastai head because we already have that.
-        head = head or create_head_unpooled(enc_out*enc_mult, 1, **head_kwargs)
+        head = head or create_head_unpooled(enc_out*enc_mult, **head_kwargs)
         self.groups = nn.Sequential(enc, pool, head)
 
     def forward(self, x):
