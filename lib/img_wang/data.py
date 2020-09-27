@@ -549,8 +549,22 @@ class SupervisedDataset(ImageFolder):
 
 
 class RandomTransform:
+    """Wrap a function to create a data transform that occurs with some
+    probability p.
+    """
 
     def __init__(self, func, p=.5):
+        """
+
+        Parameters
+        ----------
+        func: function
+            Accepts a single argument (the input x tensor) and outputs a
+            transformed version of the tensor.
+        p: float
+            Between 0 and 1, determines the likelihood that func will be
+            applied to any input x.
+        """
         self.func = func
         self.p = p
 
@@ -755,6 +769,20 @@ def trunc_norm_like(*args, min=0, max=1):
 
 
 def trunc_norm_like_wrapper(img_srcs, y):
+    """Wrap trunc_norm_like to fit my dataset augmentation interface.
+
+    Parameters
+    ----------
+    img_srcs: Iterable[torch.tensor]
+        List of image tensors.
+    y: torch.tensor
+        Labels. These come out unchanged.
+
+    Returns
+    -------
+    tuple: First item is a tuple of image tensors which now contain random
+    noise. Second item is a tensor of labels (same as input y).
+    """
     return trunc_norm_like(*img_srcs), y
 
 
