@@ -131,4 +131,18 @@ CPU Memory: ~3,320 MB
 Epoch time (train): ~10min
 
 Takeaways:
+-Validation set performance is still no better than chance. How can model be that bad? Even with no pre-training, we really shouldn't be doing THAT poorly. Maybe resnext is so giant it really needs to be pretrained otherwise it overfits too easily?
+
+V2
+--
+Summary:
+Same as v1 but freeze encoder for first 3 epochs and slightly increase dropout in classification head.
+
+Approximate Stats:
+GPU Memory Usage: 1,1827/8,126 MB when training just head
+GPU Utilization: fluctuates 90-98%
+CPU Memory: ~2,958 MB when training just head
+Epoch time (train): ~2:10min when training just head
+
+Takeaways:
 -

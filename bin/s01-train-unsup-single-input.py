@@ -120,7 +120,7 @@ def train(# DATA PARAMETERS
                  ModelCheckpoint(),
                  EarlyStopper(monitor, 'min', patience=patience)]
     if gradual_unfreeze:
-        callbacks.append(ModelUnfreezer(unfreeze_e2g, 'groups', 'layers'))
+        callbacks.append(ModelUnfreezer(unfreeze_e2g, 'groups', 'epoch'))
         if not freeze_enc:
             warnings.warn('Setting `freeze_enc` to true because you\'re using '
                           'gradual unfreezing.')

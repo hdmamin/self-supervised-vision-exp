@@ -354,8 +354,20 @@ Plans: Examine results of v0. Try training v1 w/ pretrained encoder weights.
 
 9/26/20
 -------
-Progress: Examined results of v0 (okay on train set but useless on validation set). Launched run with pretrained encoder. Added debug decorator to s01 to show all parameters at the time the script was called (this will be captured in trian.log and provides some extra info to complement cmd.txt: if script arguments or defaults change, they aren't shown in cmd.txt).
+Progress: Examined results of v0 (okay on train set but useless on validation set). Launched run with pretrained encoder. Added debug decorator to s01 to show all parameters at the time the script was called (this will be captured in trian.log and provides some extra info to complement cmd.txt: if script arguments or defaults change, they aren't shown in cmd.txt). Later launched v2 with pretrained encoder and gradual unfreezing. Fixed bug in s01 when using ModelUnfreezer callback and added option to customize unfreezing schedule. Read through requirements from the start of the project to start taking stock of where we are (conundrum: I very explicitly listed ">=2 custom fastai components" as a requirement, but I ended up moving away from fastai. Should I consider this an acceptable choice given that incendio and lightning seem like perfectly viable options going forward? Going back and making a couple fastai components now would really require re-doing my whole training framework which I really don't feel like doing. Maybe it's acceptable to conclude the project has reached a natural stopping point, I just simply failed to meet some of the requirements? IE my imaginary "grade" would be lower but the work is still done.).
 
-Plans: 
+Plans: Assess v2 results. Continue taking stock of experiment and decide how to proceed. I could:
+-try a super simple problem like epoching's random rotation example
+-try to get something working with contrastive loss (will require incendio updates or switch to pytorch lightning) and/or Siamese nets.
+-Try a more interesting task, i.e. pursue my Image "language model" idea.
+-Continue trying to get a functioning supervised model to work to make sure I'm not messing something up there (e.g. just load a pretrained mobilenet and see how that does).
+-Call this a day and move on to a new problem. It's possible the tasks I've tried just aren't that effective, and I think it's normal that most DL ideas don't end up working that well. This image stuff was just supposed to be something of a warmup anyway. There are plenty of other interesting ideas to try.
+
+9/27/20
+-------
+Progress:
+
+Plans:
+
 
 
