@@ -367,7 +367,7 @@ Plans: Assess v2 results. Continue taking stock of experiment and decide how to 
 -------
 Progress: Wrote out some plans for how to proceed (see misc.txt). Found and fixed bug in supervised databunch where class labels didn't align, hence the ridiculously bad performance on the validation set. Spent a while trying to track down jupyter bug where kernel never loaded and maybe fixed it (updated "notebook" package. Didn't work initially but evnetually it did.) and sort of fixed issue with jupyter shortcuts though not entirely (now "run cell but don't move on to the next cell" seems to be command-enter on the first call (or maybe when I'm in insert mode) and control-enter otherwise (???). Launched v3 supervised training run which is really just v0 with a functioning databunch. Did a little disk cleanup since paperspace ran out of storage (resnext takes a ton of space, I think).
 
-Plans: Examine v0 training results. Launch v1 with pretrained encoder weights.
+Plans: Examine v0 training results (based on early results, I'm suspicious there may still be a bug since validation performance is currently worse than chance). Launch v1 with pretrained encoder weights.
 
 9/28/20
 -------
