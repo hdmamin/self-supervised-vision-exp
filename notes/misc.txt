@@ -250,3 +250,11 @@ pin_memory experiments
 S01 error (I think my auto calculation of encoder output dim isn't working correctly):
 
 RuntimeError: non-empty 3D or 4D (batch mode) tensor expected for input
+
+9/27/20
+-------
+Thoughts on how to proceed:
+1. Try a pretrained model on supervised task. Just want to make sure there isn't some weird bug here - if my unsupervised ideas just aren't very effective, that's fine, but the fact that the resnext performed at chance on the supervised task seems very weird. [OHHH. Just realized imagefolder is probably assigning different indices to valid set because it has some different classes than the training set. Investigate.]
+2. Try a VERY VERY simple binary pretraining task. I already have the script and model framework set up so this should be very easy. Realistically, it's mostly making a new torch dataset, which is one of my favorite parts anyway.
+3. I can put off the decision about Siamese nets a little longer while addressing 1 and 2, but I do think that would be a good thing to do. My main hesitance is it would require major incendio updates (which would also likely lead to slower training on vanilla tasks) but that might be a nice change, tbh. 
+4. Can put off this decision while addressing 1 and 2, but leaning towards skipping the ">=2 custom fastai components" requirement. It's important to have requirements upfront to set a direction, and failing to meet them certainly isn't a good thing, and if it becomes a habit I may have to reconsider my attitude towards this. But my thinking is that ultimately, what matters is to a. put in consistent effort in a moderately coherent direction, and b. try something new. A is certainly satisfied (didn't skip any days or even have any "1 minute of work" days; in fact, I've been consistently putting in 1+ hours). Anything self-supervised is new, as are Siamese nets if I get to them, so B is satisfied. And in this case, I think I'm starting to accept that I just like pytorch's API a lot more than fastai's, which is a valuable thing to know. Though in that case, I should probably give lightning a longer shot...sigh. I guess the fact that using Incendio is as easy as it is is a good sign.

@@ -4,7 +4,6 @@ from fastai2.vision.learner import create_head
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torchvision import models as tvm
 import warnings
 
@@ -63,6 +62,8 @@ class SmoothSoftmaxBase(nn.Module):
                 return self.act(x.div(self.temperature))
             except TypeError:
                 self.temperature = np.sqrt(x.shape[-1])
+            except Exception as e:
+                raise e
 
 
 class SmoothSoftmax(SmoothSoftmaxBase):

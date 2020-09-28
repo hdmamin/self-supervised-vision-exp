@@ -509,7 +509,7 @@ class PatchworkDataset(Dataset):
 class SupervisedDataset(ImageFolder):
 
     def __init__(self, dir_=None, shape=(128, 128), tfms='train',
-                 max_len=None, random=True, **kwargs):
+                 max_len=None, random=True, class_to_idx=None, **kwargs):
         """ImageFolder dataset with some default transforms for train and val
         sets. Also supports subsetting using `max_len` attr in constructor
         (similar to other datasets, we sometimes don't want to use all files in
@@ -546,6 +546,13 @@ class SupervisedDataset(ImageFolder):
         if max_len:
             # Tried overwriting self but it's not trivial.
             self.samples = ds_subset(self, max_len, random=random).samples
+
+        if class_to_idx:
+            self.class_to_idx = class_to_idx
+        elif tfms == 'val':
+            warnings.warn('If this is the validation set, you may want to '
+                          'pass in ds_train.class_to_idx. Otherwise, your '
+                          'labels will be misaligned on image wang.')
 
 
 class RandomTransform:
@@ -679,7 +686,8 @@ def get_databunch(
     dir_ = Path(dir_)
     if mode == 'supervised':
         dst = DS(dir_/'train', max_len=max_train_len, **ds_kwargs)
-        dsv = DS(dir_/'val', max_len=max_val_len, **ds_kwargs, tfms='val')
+        dsv = DS(dir_/'val', max_len=max_val_len, **ds_kwargs, tfms='val',
+                 class_to_idx=dst.class_to_idx)
     else:
         paths = paths or get_image_files(dir_)
         train, val = train_test_split(paths, train_size=train_pct,
