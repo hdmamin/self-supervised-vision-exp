@@ -78,6 +78,9 @@ class SupervisedDataPL(pl.LightningDataModule):
              tv.transforms.ToTensor()])
 
     def setup(self, stage=''):
+        # Note: this logic might not work. `classes` and `class_to_idx` are
+        # used when an ImageFolder dataset is instantiated so changing them
+        # after the fact may not solve the issue.
         self.ds_train = ImageFolder(self.root / 'train', self.train_tfms)
         self.ds_val = ImageFolder(self.root / 'val', self.val_tfms)
         self.ds_val.classes = self.ds_train.classes

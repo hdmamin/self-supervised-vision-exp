@@ -549,10 +549,75 @@ class SupervisedDataset(ImageFolder):
 
         if class_to_idx:
             self.class_to_idx = class_to_idx
+            self.classes = list(class_to_idx.keys())
         elif tfms == 'val':
             warnings.warn('If this is the validation set, you may want to '
                           'pass in ds_train.class_to_idx. Otherwise, your '
                           'labels will be misaligned on image wang.')
+
+
+class SupervisedDataset(Dataset):
+
+    def __init__(self, dir_=None, paths=None, shape=(128, 128), tfms='train',
+                 class_to_idx=None, **kwargs):
+        """ImageFolder dataset with some default transforms for train and val
+        sets. Also supports subsetting using `max_len` attr in constructor
+        (similar to other datasets, we sometimes don't want to use all files in
+        a directory.
+
+        Parameters
+        ----------
+        dir_: str or Path
+        shape: tuple[int]
+        tfms: list[transform]
+        max_len: int or None
+        random: bool
+            Only used if max_len is not None. This determines if our subset is
+            selected randomly or just slices off the first n samples.
+        kwargs: any
+            Makes it easier to swap this in when using get_databunch function.
+            Extra kwargs are ignored.
+        """
+        if not dir_ and not paths:
+            raise ValueError('One of dir_ or paths should be non-null.')
+
+        self.paths = paths or get_image_files(dir_)
+        self.shape = shape
+        self.load_img = partial(load_img, shape=shape)
+
+        # Set transforms.
+        if tfms == 'train':
+            tfms = transforms.Compose(
+                [
+                    # transforms.RandomResizedCrop(shape, (.9, 1.0)),
+                 transforms.RandomHorizontalFlip(),
+                 transforms.RandomRotation(10),
+                 transforms.ToTensor()]
+            )
+        elif tfms == 'val':
+            tfms = transforms.Compose(
+                [transforms.Resize(shape),
+                 transforms.ToTensor()]
+            )
+        elif isinstance(tfms, (list, tuple)):
+            tfms = transforms.compose(tfms)
+        self.tfms = tfms
+
+        self.class_to_idx = self._set_class_to_idx(class_to_idx)
+
+    def __len__(self):
+        return len(self.paths)
+
+    def __getitem__(self, i):
+        path = self.paths[i]
+        x = self.load_image(path)
+        y = self.class_to_idx[Path(path).parts[-2]]
+        return x, y
+
+    def _set_class_to_idx(self, class_to_idx=None):
+        if class_to_idx: return class_to_idx
+        return {cls: i for i, cls in
+                enumerate(sorted(set(Path(p).parts[-2] for p in self.paths)))}
 
 
 class RandomTransform:
