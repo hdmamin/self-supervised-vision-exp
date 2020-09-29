@@ -4,6 +4,7 @@ from fastai2.data.transforms import get_image_files
 from fastai2.vision.core import load_image
 from functools import partial
 import numpy as np
+import os
 from pathlib import Path
 from sklearn.model_selection import train_test_split
 import torch
@@ -556,10 +557,11 @@ class SupervisedDataset(ImageFolder):
                           'labels will be misaligned on image wang.')
 
 
+# TODO: testing. Still need to incorporate tfms.
 class SupervisedDataset(Dataset):
 
-    def __init__(self, dir_=None, paths=None, shape=(128, 128), tfms='train',
-                 class_to_idx=None, **kwargs):
+    def __init__(self, dir_=None, shape=(128, 128), tfms='train',
+                 max_len=None, class_to_idx=None, seed=1, **kwargs):
         """ImageFolder dataset with some default transforms for train and val
         sets. Also supports subsetting using `max_len` attr in constructor
         (similar to other datasets, we sometimes don't want to use all files in
@@ -578,18 +580,16 @@ class SupervisedDataset(Dataset):
             Makes it easier to swap this in when using get_databunch function.
             Extra kwargs are ignored.
         """
-        if not dir_ and not paths:
-            raise ValueError('One of dir_ or paths should be non-null.')
-
-        self.paths = paths or get_image_files(dir_)
+        np.random.seed(seed)
+        self.dir_ = dir_
+        self.paths = np.random.permutation(get_image_files(dir_))[:max_len]
         self.shape = shape
-        self.load_img = partial(load_img, shape=shape)
+        self.class_to_idx = self._set_class_to_idx(class_to_idx)
 
-        # Set transforms.
+        # Set transforms. ToTensor performs the x.div(255) step.
         if tfms == 'train':
             tfms = transforms.Compose(
-                [
-                    # transforms.RandomResizedCrop(shape, (.9, 1.0)),
+                [transforms.RandomResizedCrop(shape, (.9, 1.0)),
                  transforms.RandomHorizontalFlip(),
                  transforms.RandomRotation(10),
                  transforms.ToTensor()]
@@ -603,21 +603,20 @@ class SupervisedDataset(Dataset):
             tfms = transforms.compose(tfms)
         self.tfms = tfms
 
-        self.class_to_idx = self._set_class_to_idx(class_to_idx)
-
     def __len__(self):
         return len(self.paths)
 
     def __getitem__(self, i):
         path = self.paths[i]
-        x = self.load_image(path)
+        x = self.tfms(load_image(path))
+        if x.shape[0] == 1: x = torch.cat([x for _ in range(3)], dim=0)
         y = self.class_to_idx[Path(path).parts[-2]]
         return x, y
 
     def _set_class_to_idx(self, class_to_idx=None):
         if class_to_idx: return class_to_idx
-        return {cls: i for i, cls in
-                enumerate(sorted(set(Path(p).parts[-2] for p in self.paths)))}
+        _, dirs, _ = next(iter(os.walk(self.dir_)))
+        return {cls: i for i, cls in enumerate(sorted(dirs))}
 
 
 class RandomTransform:
@@ -751,8 +750,8 @@ def get_databunch(
     dir_ = Path(dir_)
     if mode == 'supervised':
         dst = DS(dir_/'train', max_len=max_train_len, **ds_kwargs)
-        dsv = DS(dir_/'val', max_len=max_val_len, **ds_kwargs, tfms='val',
-                 class_to_idx=dst.class_to_idx)
+        dsv = DS(dir_/'val', max_len=max_val_len, tfms='val',
+                 class_to_idx=dst.class_to_idx, **ds_kwargs)
     else:
         paths = paths or get_image_files(dir_)
         train, val = train_test_split(paths, train_size=train_pct,

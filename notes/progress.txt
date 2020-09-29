@@ -371,8 +371,11 @@ Plans: Examine v0 training results (based on early results, I'm suspicious there
 
 9/28/20
 -------
-Progress: 
+Progress: Discovered yesterday's bug fix didn't actually address the problem because the attributes are both defined and used in super().__init__. Rewrote supervised dataset class to not rely on imagefolder (lots of messing with transforms to get this to work - my other datasets load images as tensors but here it's more convenient to load as PIL and use torchvision transforms). Updated databunch function to work with new dataset.
 
-Plans: 
+Plans: Redo training run with new supervised dataset, hopefully finally functioning as expected. If I get that training quickly and need to find something to do in the meantime, can a. create a SUPER simple binary dataset for SSL task or b. start re-familiarizing myself with what it would take to get a siamese net working (models? training script? datasets? What needs to change, what hasn't been written at all, etc.? How big of a task would this be?). Maybe clean up data.py (rm old supervised ds if new one works).
+
+9/29/20
+-------
 
 
