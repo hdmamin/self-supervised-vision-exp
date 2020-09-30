@@ -92,7 +92,7 @@ def train(# DATA PARAMETERS
     if loss == 'auto':
         if ds_mode == 'supervised':
             loss = F.cross_entropy
-            head_kwargs['n_out'] = len(dst.classes)
+            head_kwargs['n_out'] = len(dst.class_to_idx)
         else:
             loss = F.binary_cross_entropy_with_logits
             head_kwargs['n_out'] = 1

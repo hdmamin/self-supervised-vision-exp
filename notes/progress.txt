@@ -377,5 +377,13 @@ Plans: Redo training run with new supervised dataset, hopefully finally function
 
 9/29/20
 -------
+Progress: Fixed minor bug in s01 to reflect my new supervised dataset. Launched another attempt at training on the supervised task from scratch but it STILL performs at chance on the validation set. Built most of a new unsupervised dataset where the user picks an albumentations transform to be applied with p=.5 (by default) and the label is whether it was applied.
 
+Plans: DEEP INVESTIGATION into what could possibly be wrong with the supervised task to make it still fail. If that gets done quickly, re-launch training run with no pretrained weights. If there's extra time, continue tracking down mysterious bug in albumentations dataset (possibly something about resizing?).
+
+9/30/20
+-------
+Progress:
+
+Plans:
 

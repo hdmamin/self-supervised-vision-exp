@@ -160,3 +160,18 @@ Epoch time (train): ~10min
 
 Takeaways:
 -Interesting that this takes up more cpu memory than v0. Wonder if it just fluctuates a lot and I happened to check it at different times? Didn't seem like it though.
+
+
+V4
+--
+Summary:
+Re-doing v0 after REALLY fixing bug in supervised databunch: resnext with no pretrained weights (either imagenet or SSL).
+
+Approximate Stats:
+GPU Memory Usage: 4,667/8,126 MB
+GPU Utilization: fluctuates 10-98%, doesn't stay constant for long
+CPU Memory: ~3,110 MB
+Epoch time (train): ~10min
+
+Takeaways:
+-
