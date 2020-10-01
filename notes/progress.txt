@@ -383,7 +383,13 @@ Plans: DEEP INVESTIGATION into what could possibly be wrong with the supervised 
 
 9/30/20
 -------
-Progress:
+Progress: Tried training run with pretrained mobilenet and it does okay, so I guess resnext just really really sucks when training from scratch? Found and fixed bug in albumentations ds (was repeating over the wrong dimension - for some reason this worked differently in my other load_img function). Tried out a few albumentations transforms to find promising candidates.
 
-Plans:
+Plans: Try training a mobilenet supervised run with random weights. Investigate what it would take to get siamese net and/or contrastive loss going.
+
+10/1/20
+-------
+Progress: 
+
+Plans: 
 
