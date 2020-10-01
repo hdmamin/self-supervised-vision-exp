@@ -174,4 +174,18 @@ CPU Memory: ~3,110 MB
 Epoch time (train): ~10min
 
 Takeaways:
--
+-Still performing at chance on validation set.
+
+V5
+--
+Summary:
+Supervised training with pretrained mobilenet. Faster to experiment with than resnext and want to use pretrained weights to see if we still perform at chance. Also speculating maybe resnext is just so big that is massively overfits? Still seems crazy that validation performance could be so bad though.
+
+Approximate Stats:
+GPU Memory Usage: 1,239/8,126 MB
+GPU Utilization: fluctuates 63-73%
+CPU Memory: ~3,110 MB
+Epoch time (train): ~1min
+
+Takeaways:
+-Forgot to increase batch size when reverting to mobilenet.
