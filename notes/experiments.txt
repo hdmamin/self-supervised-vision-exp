@@ -189,3 +189,34 @@ Epoch time (train): ~1min
 
 Takeaways:
 -Forgot to increase batch size when reverting to mobilenet.
+-Realizing this is meant to be a difficult task, hence the need for SSL (if training from scratch worked well, there'd be no need). Not sure if transfer learning is expected to work well here or not - in some situations it's not an option (probably no massive pretrained models for some specific types of medical images) so I don't know what to make of this result. Imagewang leaderboard tops out around ~65% accuracy for this size of image which doesn't sound amazing, but that's actually doing better than my pretrained imagenet models :| .
+
+V6
+--
+Summary:
+Same as v5 but with random weights. 
+
+Approximate Stats [NOTE: didn't record gpu utilization, just leaving v5's stats there since it's probably similar]:
+GPU Memory Usage: 1,239/8,126 MB
+GPU Utilization: fluctuates 63-73%
+CPU Memory: ~2,920 MB
+Epoch time (train): ~1min
+
+Takeaways:
+-v6's val acc was still consistently improving but loss wasn't so it was stopped prematurely.
+
+V7
+--
+Summary:
+Same as v6 but monitor accuracy instead of loss for early stopping 
+
+Approximate Stats:
+GPU Memory Usage: 3,361/8,126 MB
+GPU Utilization: fluctuates 73-100%
+CPU Memory: ~3,170 MB
+Epoch time (train): ~45s
+
+Takeaways:
+-Bug in s01, needed to update earlystopper callback when monitoring different quantity. >:(
+
+

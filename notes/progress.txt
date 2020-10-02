@@ -389,7 +389,13 @@ Plans: Try training a mobilenet supervised run with random weights. Investigate 
 
 10/1/20
 -------
-Progress: 
+Progress: Launched a couple attempts at training mobilenet w/ random weights but encountered issues with early stopping. Updated s01 to allows us to monitor accuracy instead of loss. Read through some fastai tutorials again and looked through siamese repo (think this is actually doable with incendio but the workflow is annoying - need to make model return a single output so basically we put half of the contrastive loss calculation inside the model, which means I'd need to write a new version of contrastive loss that the L2 norm of x1 and x2.
 
-Plans: 
+Plans: Launch a self supervised training run with mobilenet encoder and a simple dataset (prob an albumentations one). Maybe write a wrapper to contrastive loss to work w/ incendio OR try to get a fastai Transform working (basically useless - we're not really going to use it at this point, but I'm not sure how to determine when to end this project otherwise so maybe it's simplest to just get a couple custom fastai components working).
+
+10/2/20
+-------
+Progress:
+
+Plans:
 

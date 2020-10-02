@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import warnings
 
-from htools import log_cmd, immutify_defaults, debug
+from htools import log_cmd, immutify_defaults, debug, valuecheck
 from img_wang.config import Config
 from img_wang.data import get_databunch
 from img_wang.models import SingleInputBinaryModel, Encoder, \
@@ -23,6 +23,7 @@ from incendio.metrics import mean_soft_prediction, std_soft_prediction
 @log_cmd(str(Config.data_dir/'cmd.txt'), 'w')
 @immutify_defaults
 @debug
+@valuecheck
 def train(# DATA PARAMETERS
           bs=128,
           num_workers=8,
@@ -50,7 +51,7 @@ def train(# DATA PARAMETERS
           unfreeze_e2g={1: 3},
           loss='auto',
           patience=8,
-          monitor='loss',
+          monitor:('loss', 'accuracy')='loss',
           # BOOKKEEPING PARAMETERS
           pre=''):
     """Fit model on unsupervised task where model accepts a single input.
@@ -115,10 +116,12 @@ def train(# DATA PARAMETERS
 
     # Metrics and callbacks.
     metrics = [mean_soft_prediction, std_soft_prediction, accuracy_score]
+    checkpoint_kwargs = {'metric': monitor,
+                         'goal': 'min' if monitor == 'loss' else 'max'}
     callbacks = [MetricHistory(),
                  CometCallbackWithGrads('img_wang'),
-                 ModelCheckpoint(),
-                 EarlyStopper(monitor, 'min', patience=patience)]
+                 ModelCheckpoint(**checkpoint_kwargs),
+                 EarlyStopper(**checkpoint_kwargs, patience=patience)]
     if gradual_unfreeze:
         callbacks.append(ModelUnfreezer(unfreeze_e2g, 'groups', 'epoch'))
         if not freeze_enc:
