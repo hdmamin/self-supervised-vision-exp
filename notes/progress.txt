@@ -395,7 +395,13 @@ Plans: Launch a self supervised training run with mobilenet encoder and a simple
 
 10/2/20
 -------
-Progress:
+Progress: Tried transferring weights from SSL mobilenet run v4 but validation accuracy was near 0%. Started giving fastai another shot, mostly just to satisfy my requirements so I can start wrapping up the project at some point: looks like custom components will be a Transform (basically a dataset) and a fastuple subclass. Made some progress but not done yet.
 
-Plans:
+Plans: Finish fastai components. Try training on a new SSL task using AlbumentationsDS.
+
+10/3/20
+-------
+Progress: 
+
+Plans: 
 

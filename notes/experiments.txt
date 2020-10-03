@@ -219,4 +219,17 @@ Epoch time (train): ~45s
 Takeaways:
 -Bug in s01, needed to update earlystopper callback when monitoring different quantity. >:(
 
+V8
+--
+Summary:
+Try loading weights from mobilenet SSL v4.
+
+Approximate Stats:
+GPU Memory Usage: 
+GPU Utilization: 
+CPU Memory: 
+Epoch time (train): ~15s when head is frozen, ~45s afterwards
+
+Takeaways:
+-Nearly 0% accuracy on validation set???
 
