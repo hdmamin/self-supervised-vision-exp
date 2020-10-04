@@ -628,7 +628,7 @@ class AlbumentationsDataset(Dataset):
 
     @valuecheck
     def __init__(self, dir_=None, paths=(), shape=(128, 128), pct_pos=.5,
-                 tfm='ChannelShuffle', **tfm_kwargs):
+                 tfm='ChannelShuffle', **kwargs):
         """
         dir_: str or Path
             Name of directory containing image files.
@@ -643,10 +643,12 @@ class AlbumentationsDataset(Dataset):
             Percent of generated samples that will be positives (patch comes
             from the same image as the source image).
         tfm: str
-            Name of Albumentations transform to apply with probability `pct_pos`.
-            Semi-promising tfm choices: ChannelShuffle, ElasticTransform
-        tfm_kwargs: any
-            Additional kwargs to pass to the selected Albumentations transform.
+            Name of Albumentations transform to apply with probability
+            `pct_pos`. Semi-promising tfm choices: ChannelShuffle,
+            ElasticTransform
+        kwargs: any
+            Just here for compatibility with get_databunch interface. These are
+            unused.
         """
         if not dir_ and not paths:
             raise ValueError('One of dir_ or paths should be non-null.')
@@ -655,7 +657,7 @@ class AlbumentationsDataset(Dataset):
         self.shape = shape
         self.pct_pos = pct_pos
         self.load_img = load_image
-        self.tfm = getattr(A, tfm)(always_apply=True, **tfm_kwargs)
+        self.tfm = getattr(A, tfm)(always_apply=True)
         self.tfm_pipeline = A.Compose([A.Resize(*shape),
                                        ToTensorV2()])
 
