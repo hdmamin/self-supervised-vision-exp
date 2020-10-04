@@ -1,3 +1,5 @@
+import albumentations as A
+from albumentations.pytorch import ToTensorV2
 from copy import copy
 from fastai2.torch_core import TensorImage
 from fastai2.data.transforms import get_image_files
@@ -557,7 +559,6 @@ class SupervisedDataset(ImageFolder):
                           'labels will be misaligned on image wang.')
 
 
-# TODO: testing. Still need to incorporate tfms.
 class SupervisedDataset(Dataset):
 
     def __init__(self, dir_=None, shape=(128, 128), tfms='train',
@@ -619,6 +620,61 @@ class SupervisedDataset(Dataset):
         return {cls: i for i, cls in enumerate(sorted(dirs))}
 
 
+class AlbumentationsDataset(Dataset):
+    """Dataset for SSL. Apply a single Albumentations transform with
+    probability 0.5 (or as specified). Label is 1 if transform is applied, 0
+    otherwise.
+    """
+
+    @valuecheck
+    def __init__(self, dir_=None, paths=(), shape=(128, 128), pct_pos=.5,
+                 tfm='ChannelShuffle', **tfm_kwargs):
+        """
+        dir_: str or Path
+            Name of directory containing image files.
+        paths: Iterable[str or Path]
+            Alternately, user can provide a list of image paths instead of a
+            directory name. Exactly one of these should be not None.
+        shape: tuple[int]
+            Shape to resize images to. Just use defaults always (the image wang
+            challenge was designed with specific shapes in mind to allow for
+            direct comparisons).
+        pct_pos: float
+            Percent of generated samples that will be positives (patch comes
+            from the same image as the source image).
+        tfm: str
+            Name of Albumentations transform to apply with probability `pct_pos`.
+            Semi-promising tfm choices: ChannelShuffle, ElasticTransform
+        tfm_kwargs: any
+            Additional kwargs to pass to the selected Albumentations transform.
+        """
+        if not dir_ and not paths:
+            raise ValueError('One of dir_ or paths should be non-null.')
+
+        self.paths = paths or get_image_files(dir_)
+        self.shape = shape
+        self.pct_pos = pct_pos
+        self.load_img = load_image
+        self.tfm = getattr(A, tfm)(always_apply=True, **tfm_kwargs)
+        self.tfm_pipeline = A.Compose([A.Resize(*shape),
+                                       ToTensorV2()])
+
+    def __len__(self):
+        return len(self.paths)
+
+    def __getitem__(self, i):
+        """
+        1 if patch is from the original image, 0 otherwise.
+        """
+        x = np.array(self.load_img(self.paths[i]))
+        if len(x.shape) == 2: x = np.repeat(x[..., None], 3, axis=2)
+        y = 0
+        if np.random.uniform() < self.pct_pos:
+            x = self.tfm(image=x)['image']
+            y = 1
+        return self.tfm_pipeline(image=x)['image']/255.0, y
+
+
 class RandomTransform:
     """Wrap a function to create a data transform that occurs with some
     probability p.
@@ -670,8 +726,8 @@ def patchwork_collate_fn(rows):
 
 @valuecheck
 def get_databunch(
-    dir_=None, paths=None,
-    mode:('mixup', 'scale', 'quadrant', 'patchwork', 'supervised')='mixup',
+    dir_=None, paths=None, mode:('mixup', 'scale', 'quadrant', 'patchwork',
+                                 'supervised', 'albumentations')='mixup',
     bs=32, valid_bs_mult=1, train_pct=.9, shuffle_train=True, drop_last=True,
     random_state=0, max_train_len=None, max_val_len=None, num_workers=8,
     pin_memory=False, collate_custom=False, **ds_kwargs
