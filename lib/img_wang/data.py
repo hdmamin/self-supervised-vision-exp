@@ -509,54 +509,54 @@ class PatchworkDataset(Dataset):
         return img_targ, coords_targ, img_src, coords_src
 
 
-class SupervisedDataset(ImageFolder):
-
-    def __init__(self, dir_=None, shape=(128, 128), tfms='train',
-                 max_len=None, random=True, class_to_idx=None, **kwargs):
-        """ImageFolder dataset with some default transforms for train and val
-        sets. Also supports subsetting using `max_len` attr in constructor
-        (similar to other datasets, we sometimes don't want to use all files in
-        a directory.
-
-        Parameters
-        ----------
-        dir_: str or Path
-        shape: tuple[int]
-        tfms: list[transform]
-        max_len: int or None
-        random: bool
-            Only used if max_len is not None. This determines if our subset is
-            selected randomly or just slices off the first n samples.
-        kwargs: any
-            Makes it easier to swap this in when using get_databunch function.
-            Extra kwargs are ignored.
-        """
-        if tfms == 'train':
-            tfms = transforms.Compose(
-                [transforms.RandomResizedCrop(shape, (.9, 1.0)),
-                 transforms.RandomHorizontalFlip(),
-                 transforms.RandomRotation(10),
-                 transforms.ToTensor()]
-            )
-        elif tfms == 'val':
-            tfms = transforms.Compose(
-                [transforms.Resize(shape),
-                 transforms.ToTensor()]
-            )
-        elif isinstance(tfms, (list, tuple)):
-            self.tfms = transforms.compose(tfms)
-        super().__init__(dir_, tfms)
-        if max_len:
-            # Tried overwriting self but it's not trivial.
-            self.samples = ds_subset(self, max_len, random=random).samples
-
-        if class_to_idx:
-            self.class_to_idx = class_to_idx
-            self.classes = list(class_to_idx.keys())
-        elif tfms == 'val':
-            warnings.warn('If this is the validation set, you may want to '
-                          'pass in ds_train.class_to_idx. Otherwise, your '
-                          'labels will be misaligned on image wang.')
+# class SupervisedDataset(ImageFolder):
+#
+#     def __init__(self, dir_=None, shape=(128, 128), tfms='train',
+#                  max_len=None, random=True, class_to_idx=None, **kwargs):
+#         """ImageFolder dataset with some default transforms for train and val
+#         sets. Also supports subsetting using `max_len` attr in constructor
+#         (similar to other datasets, we sometimes don't want to use all files in
+#         a directory.
+#
+#         Parameters
+#         ----------
+#         dir_: str or Path
+#         shape: tuple[int]
+#         tfms: list[transform]
+#         max_len: int or None
+#         random: bool
+#             Only used if max_len is not None. This determines if our subset is
+#             selected randomly or just slices off the first n samples.
+#         kwargs: any
+#             Makes it easier to swap this in when using get_databunch function.
+#             Extra kwargs are ignored.
+#         """
+#         if tfms == 'train':
+#             tfms = transforms.Compose(
+#                 [transforms.RandomResizedCrop(shape, (.9, 1.0)),
+#                  transforms.RandomHorizontalFlip(),
+#                  transforms.RandomRotation(10),
+#                  transforms.ToTensor()]
+#             )
+#         elif tfms == 'val':
+#             tfms = transforms.Compose(
+#                 [transforms.Resize(shape),
+#                  transforms.ToTensor()]
+#             )
+#         elif isinstance(tfms, (list, tuple)):
+#             self.tfms = transforms.compose(tfms)
+#         super().__init__(dir_, tfms)
+#         if max_len:
+#             # Tried overwriting self but it's not trivial.
+#             self.samples = ds_subset(self, max_len, random=random).samples
+#
+#         if class_to_idx:
+#             self.class_to_idx = class_to_idx
+#             self.classes = list(class_to_idx.keys())
+#         elif tfms == 'val':
+#             warnings.warn('If this is the validation set, you may want to '
+#                           'pass in ds_train.class_to_idx. Otherwise, your '
+#                           'labels will be misaligned on image wang.')
 
 
 class SupervisedDataset(Dataset):
@@ -670,10 +670,10 @@ class AlbumentationsDataset(Dataset):
         """
         x = np.array(self.load_img(self.paths[i]))
         if len(x.shape) == 2: x = np.repeat(x[..., None], 3, axis=2)
-        y = 0
+        y = torch.zeros(1)
         if np.random.uniform() < self.pct_pos:
             x = self.tfm(image=x)['image']
-            y = 1
+            y.add_(1)
         return self.tfm_pipeline(image=x)['image']/255.0, y
 
 
