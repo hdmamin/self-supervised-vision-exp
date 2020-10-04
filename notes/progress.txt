@@ -401,6 +401,12 @@ Plans: Finish fastai components. Try training on a new SSL task using Albumentat
 
 10/3/20
 -------
+Progress: Trained on Albumentations channel shuffle SSL task (metrics look pretty good (easy task) but it remains to be seen if the encoder will be remotely useful). Continued work on fastai components: fixed DS issue with index errors. Trying to get show_batch to work with help of MixedImages tuple subclass but not done yet.
+
+Plans: Try transferring weights from channel shuffle task to supervised task. Continue troubleshooting MixedImages show batch.
+
+10/4/20
+-------
 Progress: 
 
 Plans: 
