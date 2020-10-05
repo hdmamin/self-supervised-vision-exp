@@ -263,3 +263,8 @@ Thoughts on how to proceed:
 -------
 Kornia - python package that looks like it lets us do image transforms on tensors (optionally on the gpu). This is nice to keep in mind because torchvision acts on Pillow images (and I'm not sure but I think maybe Albumentations does too?). In cases like this where I've built functionality that loads images into tensors first, it would be nice to have transforms that don't require either converting back to Pillow or writing my own custom tensor transforms (though that is fun...).
 
+10/4/20
+-------
+-noticed fastai siamese net tutorial calls encoder twice inside forward method, so I don't think this caused a problem in terms of computing gradients when I did this. I still wonder if stacking these as a batch would save a significant amount of time when the model is big, but maybe it doesn't matter much.
+-also noticed they simply concat encoder outputs along dim=1 (i.e. encoder might output 2 (bs, 512) tensors which we concat into 1 (bs, 1024) tensor. Slightly surprised this would work well compared to a similarity-based approach.
+

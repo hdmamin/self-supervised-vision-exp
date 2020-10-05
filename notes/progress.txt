@@ -407,7 +407,14 @@ Plans: Try transferring weights from channel shuffle task to supervised task. Co
 
 10/4/20
 -------
-Progress: 
+Progress: Got fastai transform and tuple subclass working (show_batch works now, mostly). Transferred channel shuffle encoder (which worked pretty well) to supervised task (which did not).
 
-Plans: 
+Plans: Explore channel shuffle encoder a bit, then the supervised version that started with its weights. Want to identify what is happening - does supervised model output random classes, the same class, etc? And/or port fastai custom components to lib.
+
+10/5/20
+-------
+Progress:
+
+Plans:
+
 
