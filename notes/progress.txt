@@ -413,8 +413,16 @@ Plans: Explore channel shuffle encoder a bit, then the supervised version that s
 
 10/5/20
 -------
+Progress: Loaded trained supervised model (transferred encoder from channel shuffle task) and started examining results. Ported fastai components to lib.
+
+Plans: Continue exploring supervised model predictions (still hoping there's somehow another class_to_idx alignment bug; while annoying, that would be better than having the model perform so inexplicably terribly).
+
+10/6/20
+-------
 Progress:
 
 Plans:
+
+
 
 
