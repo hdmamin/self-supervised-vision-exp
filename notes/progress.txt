@@ -419,10 +419,13 @@ Plans: Continue exploring supervised model predictions (still hoping there's som
 
 10/6/20
 -------
-Progress:
+Progress: Wrote more generalized version of StackedEncoder (new one called MultiInputEncoder) to allow easy construction of siamese nets, triplet nets, etc. Updated top_mistakes function to work in the supervised case (multiclass instead of binary outputs). Reviewed what gradient subscription gets, considering upgrade (GPUs were initially all unavailable. Also would like to be able to run multiple experiments, and membership increases concurrent notebook limit from 1 to 5. Not 100% sure if that's 5 different machines or literally 5 notebooks on 1 machine - the former would help me, the latter would not, since I run experiments from the command line.). 
 
-Plans:
+Plans: Maybe update top_mistakes to allow work on whole dataset, not just one batch (eventually should port this to incendio). Maybe also update incendio eval function to allow us to return predictions. Continue investigating why validation performance is so terrible.
 
+10/7/20
+-------
+Progress: 
 
-
+Plans: 
 
