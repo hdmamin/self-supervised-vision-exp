@@ -18,15 +18,28 @@ class MixedImages(fastuple):
 
 
 class FastMixupDataset(Transform):
+    """Basically fastai equivalent of img_wang.data.MixupDataset."""
 
     def __init__(self, paths, shape=(160, 160), n=3, **kwargs):
+        """Saw a bug once with n=2 but couldn't reproduce it since then. Not
+        sure if it was because of n or if it was unrelated.
+
+        Parameters
+        ----------
+        paths
+        shape
+        n
+        kwargs
+        """
         self.paths = np.array(paths)
         self.n = n
-        self.mixer = ImageMixer(n=3, **kwargs)
+        self.mixer = ImageMixer(n=n, **kwargs)
         self.load_img = partial(load_img, shape=shape)
 
     def encodes(self, i):
         remaining = len(self.paths) - i
+        # Fastai transform doesn't define __len__ so we need another way of
+        # handling when index is close to the max_idx.
         if remaining >= self.n:
             paths = self.paths[i:i + self.n]
         else:
