@@ -46,20 +46,26 @@ def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16, df=None):
         xb, yb = next(iter(dl))
     if df is None:
         # Construct title strings.
-        preds = trainer.predict(xb, logits=False)
+        y_proba = trainer.predict(xb, logits=False)
+        if trainer.mode == 'multiclass':
+            y_proba, y_pred = y_proba.max(-1)
+        else:
+            y_pred = y_proba > trainer.threshold
         titles = []
         idx = getattr(xb, 'idx', [None] * len(xb))
-        for x, y, yhat, i in zip(xb, yb, preds, idx):
+        for x, y, proba, pred, i in zip(xb, yb, y_proba, y_pred, idx):
             titles.append(
-                f'Label: {y.item()}\nPred: {yhat.item():.3f}\nIdx: {i}'
+                f'Label: {y.item()}\nPred: {pred.item()} '
+                f'(p={proba.item():.3f})\nIdx: {i}'
             )
 
         df = pd.DataFrame(
             {'y': yb.squeeze(-1).numpy(),
-             'y_proba': preds.squeeze(-1).cpu().numpy(),
+             'y_pred': y_pred.cpu().numpy(),
+             'y_proba': y_proba.squeeze(-1).cpu().numpy(),
              'title': titles}
         )
-    sorted_mistakes = df.lambda_sort(lambda x: abs(x.y - x.y_proba),
+    sorted_mistakes = df.lambda_sort(lambda x: (x.y != x.y_pred) * x.y_proba,
                                      ascending=False)
     idx = sorted_mistakes.index.values
     show_images([xb[i] for i in idx[:n]],
