@@ -140,6 +140,23 @@ class StackedEncoder(Encoder):
         return xb.view(bs, -1, *xb.shape[-3:])       # (bs, n+1, emb_dim, h, w)
 
 
+class MultiInputEncoder(nn.Module):
+    """Parent class to implement a Siamese network or triplet network (or any
+    network that passes n inputs of the same shape through a shared encoder).
+    It concatenates the items into a single batch so the encoder's forward
+    method (implemented as self._forward) only needs to be called once.
+    """
+
+    def forward(self, *xb):
+        bs = xb[0].shape[0]
+        xb = self._forward(torch.cat(xb, dim=0))
+        return xb.view(bs, -1, xb.shape[1:])
+
+    @abstractmethod
+    def _forward(self, xb):
+        raise NotImplementedError
+
+
 class TorchvisionEncoder(BaseModel):
     """Create an encoder from a standard architecture provided by Torchvision.
     By default, pretrained weights will be used but that can be overridden in
