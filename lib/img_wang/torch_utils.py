@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import random
 import torch
+from torch.utils.data import SequentialSampler, BatchSampler, DataLoader
 import warnings
 
 from htools import lmap
@@ -40,35 +41,43 @@ def summarize_acts(acts):
     plt.show()
 
 
-def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16, df=None):
+def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16):
     if xb is None:
-        if dl is None: dl = trainer.dl_val
-        xb, yb = next(iter(dl))
-    if df is None:
-        # Construct title strings.
+        # Handle dataloaders with random shuffling. Need sequential sampling
+        # to ensure we associate the right image with its label and prediction.
+        if dl and 'random' in type(dl.batch_sampler.sampler).__name__.lower():
+            dl = DataLoader(dl.dataset, dl.batch_size, shuffle=False,
+                            num_workers=dl.num_workers)
+        _, y_proba, y_true = trainer.validate(dl, True, True, logits=False)
+    else:
         y_proba = trainer.predict(xb, logits=False)
-        if trainer.mode == 'multiclass':
-            y_proba, y_pred = y_proba.max(-1)
-        else:
-            y_pred = y_proba > trainer.threshold
-        titles = []
-        idx = getattr(xb, 'idx', [None] * len(xb))
-        for x, y, proba, pred, i in zip(xb, yb, y_proba, y_pred, idx):
-            titles.append(
-                f'Label: {y.item()}\nPred: {pred.item()} '
-                f'(p={proba.item():.3f})\nIdx: {i}'
-            )
+        y_true = yb
 
-        df = pd.DataFrame(
-            {'y': yb.squeeze(-1).numpy(),
-             'y_pred': y_pred.cpu().numpy(),
-             'y_proba': y_proba.squeeze(-1).cpu().numpy(),
-             'title': titles}
+    if trainer.mode == 'multiclass':
+        y_proba, y_pred = y_proba.max(-1)
+    else:
+        y_pred = y_proba > trainer.threshold
+
+    # Construct title strings.
+    titles = []
+    for y, proba, pred in zip(y_true, y_proba, y_pred):
+        titles.append(
+            f'True: {y.item()}\nPred: {pred.item()} (p={proba.item():.3f})'
         )
+    df = pd.DataFrame(
+        {'y': y_true.squeeze(-1).cpu().numpy(),
+         'y_pred': y_pred.cpu().numpy(),
+         'y_proba': y_proba.squeeze(-1).cpu().numpy(),
+         'title': titles}
+    )
     sorted_mistakes = df.lambda_sort(lambda x: (x.y != x.y_pred) * x.y_proba,
                                      ascending=False)
     idx = sorted_mistakes.index.values
-    show_images([xb[i] for i in idx[:n]],
+    if xb is not None:
+        images = [xb[i] for i in idx[:n]]
+    else:
+        images = [torch.cat(dl.dataset[i][:-1], dim=-1) for i in idx[:n]]
+    show_images(images,
                 nrows=int(np.ceil(np.sqrt(n))),
                 titles=[df.loc[i, 'title'] for i in idx[:n]])
     plt.tight_layout()
