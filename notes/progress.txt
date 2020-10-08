@@ -425,7 +425,14 @@ Plans: Maybe update top_mistakes to allow work on whole dataset, not just one ba
 
 10/7/20
 -------
-Progress: 
+Progress: Updated incendio validate() to allow returning predictions and/or labels. Ported random seed setter and gpu checker to incendio. Updated top_mistakes() to work on dataloaders, including dataloaders with random shuffling.
 
-Plans: 
+Plans: Use new top_mistakes functionality to do more error analysis. Maybe port top_mistakes to incendio (consider whether this should be a trainer method or a separate object. Maybe can add similar functionality to my dune function where we have not just top mistakes but also borderline mistakes (lowest confidence errors), most confident correct, least confident correct, etc.).
+
+10/8/20
+-------
+Progress:
+
+Plans:
+
 
