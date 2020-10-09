@@ -42,6 +42,30 @@ def summarize_acts(acts):
 
 
 def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16):
+    """Find the biggest mistakes made on a single batch or on a whole dataset
+    and displays the corresponding images along with their labels and
+    predictions.
+
+    Parameters
+    ----------
+    trainer: incendio.core.Trainer
+    xb: tuple[torch.Tensor]
+        Features for a single batch, as obtained by `*xb, yb = next(iter(dl))`.
+        If None is provided, we assume you want predictions for a whole
+        dataset.
+    yb: torch.Tensor
+        Labels for a single batch.
+    dl: torch.utils.data.DataLoader
+        Dataloader to evaluate. If None is provided and no batch is provided
+        either, this defaults to the trainer's validation dataloader.
+    n: int
+        Number of mistakes to display.
+
+    Returns
+    -------
+    pd.DataFrame: Contains label, predicted class, and predicted probability
+    for each example in dataset.
+    """
     if xb is None:
         # Handle dataloaders with random shuffling. Need sequential sampling
         # to ensure we associate the right image with its label and prediction.
@@ -50,7 +74,7 @@ def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16):
                             num_workers=dl.num_workers)
         _, y_proba, y_true = trainer.validate(dl, True, True, logits=False)
     else:
-        y_proba = trainer.predict(xb, logits=False)
+        y_proba = trainer.predict(*xb, logits=False)
         y_true = yb
 
     if trainer.mode == 'multiclass':
