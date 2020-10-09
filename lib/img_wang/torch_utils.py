@@ -94,8 +94,10 @@ def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16):
          'y_proba': y_proba.squeeze(-1).cpu().numpy(),
          'title': titles}
     )
-    sorted_mistakes = df.lambda_sort(lambda x: (x.y != x.y_pred) * x.y_proba,
-                                     ascending=False)
+    df['correct'] = (df.y == df.y_pred)
+    sorted_mistakes = df.lambda_sort(
+        lambda x: np.where(x.correct, -1, 1) * x.y_proba, ascending=False
+    )
     idx = sorted_mistakes.index.values
     if xb is not None:
         images = [xb[i] for i in idx[:n]]
