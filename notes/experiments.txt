@@ -40,7 +40,6 @@ Takeaways:
 -Look at epoching blog post again to see if they trained the encoder separately first (don't think they did).
 -Noticed grads were very big for early layers of encoder and decreased as we got deeper into the network. Sort of the opposite of the classic vanishing gradient problem. Not sure what to make of this. Would grad clipping be useful here (prevent a few layers from overpowering the rest) or would this just remove the little signal we do have? Probably doesn't matter for this problem since it doesn't seem to be learning regardless, but I think we saw a similar issue before so this will likely crop up again.
 
-
 v3
 --
 Summary:

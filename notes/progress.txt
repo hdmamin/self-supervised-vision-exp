@@ -437,9 +437,17 @@ Plans: Update CometCallback to name experiment. Update more experiment names in 
 
 10/9/20
 -------
+Progress: Added optional experiment name param to cometcallback and updated s01 to use this. Went through all old comet runs and renamed them manually (a few runs are missing both locally and a few others are missing in comet, but I think I deleted those because they didn't do well anyway). Solved yesterday's mystery: the run with good metrics was an unsupervised run (channel shuffle task, I believe). 
+
+Plans: Add notes on undocumented runs in experiments.txt. More work on top_mistakes: maybe make an object that makes predictions once, then lets user view worst mistakes, mildest mistakes, etc. without re-running eval code. Still need to try this on models from unsupervised tasks and models from supervised tasks with no transfer learning.
+
+10/10/20
+--------
 Progress:
 
 Plans:
+
+
 
 
 

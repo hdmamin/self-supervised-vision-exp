@@ -113,13 +113,14 @@ def train(# DATA PARAMETERS
     os.makedirs(model_parent_dir, exist_ok=True)
     out_dir = model_parent_dir/pre if pre else next_model_dir(True,
                                                               model_parent_dir)
+    exp_name = f'{"sup" if ds_mode == "supervised" else "unsup"}-{out_dir}'
 
     # Metrics and callbacks.
     metrics = [mean_soft_prediction, std_soft_prediction, accuracy_score]
     checkpoint_kwargs = {'metric': monitor,
                          'goal': 'min' if monitor == 'loss' else 'max'}
     callbacks = [MetricHistory(),
-                 CometCallbackWithGrads('img_wang'),
+                 CometCallbackWithGrads('img_wang', exp_name=exp_name),
                  ModelCheckpoint(**checkpoint_kwargs),
                  EarlyStopper(**checkpoint_kwargs, patience=patience)]
     if gradual_unfreeze:
