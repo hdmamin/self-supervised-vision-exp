@@ -34,7 +34,7 @@ class ImageMixer:
     pre-training step.
     """
 
-    def __init__(self, n=3, a=5, b=8, dist=None):
+    def __init__(self, n=3, a=5, b=8, dist=None, **kwargs):
         """
         Parameters
         ----------
@@ -50,6 +50,9 @@ class ImageMixer:
             This can be anything with a "sample()" method that generates a
             random value between 0 and 1. By default, we use a Beta
             distribution. If one is passed in, a and b are ignored.
+        kwargs: any
+            Makes it easier to use in `get_databunch` function. Extra kwargs
+            are ignored.
         """
         assert n >= 2, 'n must be >=2 so we can combine images.'
 
@@ -245,7 +248,7 @@ class ScaleDataset(Dataset):
     """
 
     def __init__(self, dir_=None, paths=None, shape=(128, 128), n=3,
-                 dist=None, a=5, b=8, regression=True, noise=False):
+                 dist=None, a=5, b=8, regression=True, noise=False, **kwargs):
         """
         Parameters
         ----------
@@ -279,6 +282,9 @@ class ScaleDataset(Dataset):
             If True, each image tensor will be replaced with random noise.
             This can be useful when trying to diagnose whether a model is
             learning anything at all.
+        kwargs: any
+            Makes it easier to swap this in when using get_databunch function.
+            Extra kwargs are ignored.
         """
         assert shape[0] == shape[1] and shape[0] % 2 == 0, 'Invalid shape.'
 
@@ -327,7 +333,15 @@ class QuadrantDataset(Dataset):
     basic output format as MixupDataset to allow us to test the same models.
     """
 
-    def __init__(self, dir_=None, paths=None, shape=(128, 128), noise=False):
+    def __init__(self, dir_=None, paths=None, shape=(128, 128), noise=False,
+                 **kwargs):
+        """
+        Parameters
+        ----------
+        kwargs: any
+            Makes it easier to swap this in when using get_databunch function.
+            Extra kwargs are ignored.
+        """
         assert shape[0] == shape[1] and shape[0] % 2 == 0, 'Invalid shape.'
 
         self.paths = paths or get_image_files(dir_)
@@ -375,7 +389,7 @@ class PatchworkDataset(Dataset):
                  patch_shape=(48, 48), pct_pos=0.5,
                  debug_mode:(None, 'fixed')=None, fixed_offset=16,
                  flip_horiz_p=0.0, flip_vert_p=0.0, rand_noise_p=0.0,
-                 noise_std=.05):
+                 noise_std=.05, **kwargs):
         """
         Parameters
         ----------
@@ -421,6 +435,9 @@ class PatchworkDataset(Dataset):
             small default: enough that the difference is usually visible to the
             human eye, but just barely. No idea if this is a good choice but
             as a starting point, the rationale seems reasonable enough.
+        kwargs: any
+            Makes it easier to swap this in when using get_databunch function.
+            Extra kwargs are ignored.
         """
         if not dir_ and not paths:
             raise ValueError('One of dir_ or paths should be non-null.')
@@ -507,56 +524,6 @@ class PatchworkDataset(Dataset):
                        slice(top_y, top_y + self.patch_h),
                        slice(left_x, left_x + self.patch_w))
         return img_targ, coords_targ, img_src, coords_src
-
-
-# class SupervisedDataset(ImageFolder):
-#
-#     def __init__(self, dir_=None, shape=(128, 128), tfms='train',
-#                  max_len=None, random=True, class_to_idx=None, **kwargs):
-#         """ImageFolder dataset with some default transforms for train and val
-#         sets. Also supports subsetting using `max_len` attr in constructor
-#         (similar to other datasets, we sometimes don't want to use all files in
-#         a directory.
-#
-#         Parameters
-#         ----------
-#         dir_: str or Path
-#         shape: tuple[int]
-#         tfms: list[transform]
-#         max_len: int or None
-#         random: bool
-#             Only used if max_len is not None. This determines if our subset is
-#             selected randomly or just slices off the first n samples.
-#         kwargs: any
-#             Makes it easier to swap this in when using get_databunch function.
-#             Extra kwargs are ignored.
-#         """
-#         if tfms == 'train':
-#             tfms = transforms.Compose(
-#                 [transforms.RandomResizedCrop(shape, (.9, 1.0)),
-#                  transforms.RandomHorizontalFlip(),
-#                  transforms.RandomRotation(10),
-#                  transforms.ToTensor()]
-#             )
-#         elif tfms == 'val':
-#             tfms = transforms.Compose(
-#                 [transforms.Resize(shape),
-#                  transforms.ToTensor()]
-#             )
-#         elif isinstance(tfms, (list, tuple)):
-#             self.tfms = transforms.compose(tfms)
-#         super().__init__(dir_, tfms)
-#         if max_len:
-#             # Tried overwriting self but it's not trivial.
-#             self.samples = ds_subset(self, max_len, random=random).samples
-#
-#         if class_to_idx:
-#             self.class_to_idx = class_to_idx
-#             self.classes = list(class_to_idx.keys())
-#         elif tfms == 'val':
-#             warnings.warn('If this is the validation set, you may want to '
-#                           'pass in ds_train.class_to_idx. Otherwise, your '
-#                           'labels will be misaligned on image wang.')
 
 
 class SupervisedDataset(Dataset):

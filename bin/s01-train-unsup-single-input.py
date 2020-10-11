@@ -34,6 +34,7 @@ def train(# DATA PARAMETERS
           flip_horiz_p=0.0,
           flip_vert_p=0.0,
           rand_noise_p=0.0,
+          albu_tfm='ChannelShuffle',
           global_rand_p=None,
           noise_std=0.05,
           # MODEL PARAMETERS. Common head kwargs: lin_ftrs, ps
@@ -86,7 +87,8 @@ def train(# DATA PARAMETERS
         flip_horiz_p=flip_horiz_p,
         flip_vert_p=flip_vert_p,
         rand_noise_p=rand_noise_p,
-        noise_std=noise_std
+        noise_std=noise_std,
+        tfm=albu_tfm
     )
 
     # Preparing for possibility of other loss functions.
