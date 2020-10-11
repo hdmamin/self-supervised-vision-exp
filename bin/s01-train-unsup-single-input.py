@@ -115,7 +115,7 @@ def train(# DATA PARAMETERS
     os.makedirs(model_parent_dir, exist_ok=True)
     out_dir = model_parent_dir/pre if pre else next_model_dir(True,
                                                               model_parent_dir)
-    exp_name = f'{"sup" if ds_mode == "supervised" else "unsup"}-{out_dir}'
+    exp_name = f'{"sup" if ds_mode=="supervised" else "unsup"}-{out_dir.stem}'
 
     # Metrics and callbacks.
     metrics = [mean_soft_prediction, std_soft_prediction, accuracy_score]

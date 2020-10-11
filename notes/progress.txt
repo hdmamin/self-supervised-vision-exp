@@ -443,9 +443,16 @@ Plans: Add notes on undocumented runs in experiments.txt. More work on top_mista
 
 10/10/20
 --------
+Progress: Did a lot more administrative work in comet: tagging experiments, creating panels for experiment comparisons, creating and saving queries, and exploring what things comet tracks by default (answer: quite a lot). Updated datasets, get_databunch func, and s01 to allow selection of different transform for albumentations SSL dataset. Launched training run with elastic transform. Found and fixed bug where comet name was using whole dir name rather than run prefix.
+
+Plans: Examine results of v9 (elastictransform SSL). Test out get_databunch in a notebook w/ different tfm params to make sure everything works as expected. Hopefully get back to my top_mistakes func (or, as I'm now envisioning, a PredictionExaminer class).
+
+10/11/20
+--------
 Progress:
 
 Plans:
+
 
 
 
