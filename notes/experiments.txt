@@ -48,7 +48,7 @@ Use my encoder instead of torchvision and fastai head instead of single linear l
 Takeaways:
 -Turning down dropout did succeed in allowing us to fit the training set, but we still don't learn much on the validation set. Could try tweaking that parameter a bit.
 
-V4
+v4
 --
 Summary:
 First full run with s01 rather than nb. Used randomly initialized mobilenet encoder and fastai head with slightly higher dropout (p=.4). Also added all 3 random transforms with p=0.5.
@@ -59,7 +59,7 @@ Takeaways:
     -turn down dropout?
     -turn down transform probability (these are applied to train set but not valid set, I'm thinking that might explain why val stats are a little better. Though I'm not sure whether removing it would actually be useful.).
 
-V5
+v5
 --
 Summary:
 Use bigger model (resnext) and turned down augmentation and dropout to try to address V4's underfitting.
@@ -73,7 +73,7 @@ Epoch time (train): ~70s
 Takeaways:
 -Overfittting now.
 
-V6
+v6
 --
 Summary:
 Now that v5 overfits, try turning up dropout and data augmentation.
@@ -82,7 +82,7 @@ Takeaways:
 -Performed very slightly better, maybe not significantly so. Still overfitting.
 -Could maybe increase early stopping patience.
 
-V7
+v7
 --
 Summary:
 Bump up to even bigger model, turn up random noise augmentation, and increase stopping patience in hopes that if we just keep training for a while, val loss might break through and improve again. We still haven't quite gotten to a place where even train performance is human level (though v6 is starting to get in the ballpark), so I'd like to try one last experiment with an enormous model and see if that helps at all. Regardless, I think it's getting to be time to wrap up this portion of the experiment.
@@ -99,11 +99,26 @@ Takeaways:
 -This is the first model where I feel we really let the model reach high train acc and saw conclusive overfitting on val set.
 -Kind of unrelated to our task, but it's pretty weird that overfitting on the train set resulted in predicting more and more positives on the val sset. Not sure what would explain that.
 
+v8
+--
+Summary:
+Channel shuffle task with randomly initialized mobilenet encoder.
+
+Approximate Stats:
+GPU Memory Usage: 
+GPU Utilization: 
+CPU Memory: 
+Epoch time (train): 
+
+Takeaways:
+-Didn't record any stats or observations at the time, but I realized comet tracks some of these things (gpu utilization, time, etc.) Also looks like they may get CLI kwargs (similar to my log_cmd decorator) and stdout (though tqdm bar causes problems here). I think it's still nice to have some of these things locally though. 
+-Performance was quite good and maybe still underfitting (prob should have monitored acc instead of loss). That doesn't mean the task is useful - it could be too trivial or niche - but at least the implementation seems to work ok.
+
 -----------------
 SUPERVISED MODELS
 -----------------
 
-V0
+v0
 --
 Summary:
 First full supervised training run. Use large resnext with random weights so we can compare to later runs with pretrained encoder weights.
@@ -118,7 +133,7 @@ Takeaways:
 -First attempt had massive negative loss, stopped training manually. Fixed several bugs (mostly holdovers from assumption that script was for unsupervised task, particularly binary classification: wrong loss function, wrong # of output classes, wrong shape and dtype of labels, wrong trainer.last_act, wrong trainer.mode).
 -Okay train performance, useless on validation set though.
 
-V1
+v1
 --
 Summary:
 Same as v0 but with pretrained encoder.
@@ -132,7 +147,7 @@ Epoch time (train): ~10min
 Takeaways:
 -Validation set performance is still no better than chance. How can model be that bad? Even with no pre-training, we really shouldn't be doing THAT poorly. Maybe resnext is so giant it really needs to be pretrained otherwise it overfits too easily?
 
-V2
+v2
 --
 Summary:
 Same as v1 but freeze encoder for first 3 epochs and slightly increase dropout in classification head.
@@ -146,7 +161,7 @@ Epoch time (train): ~2:10min when training just head
 Takeaways:
 -
 
-V3
+v3
 --
 Summary:
 Re-doing v0 after fixing bug in supervised databunch: resnext with no pretrained weights (either imagenet or SSL).
@@ -161,7 +176,7 @@ Takeaways:
 -Interesting that this takes up more cpu memory than v0. Wonder if it just fluctuates a lot and I happened to check it at different times? Didn't seem like it though.
 
 
-V4
+v4
 --
 Summary:
 Re-doing v0 after REALLY fixing bug in supervised databunch: resnext with no pretrained weights (either imagenet or SSL).
@@ -175,7 +190,7 @@ Epoch time (train): ~10min
 Takeaways:
 -Still performing at chance on validation set.
 
-V5
+v5
 --
 Summary:
 Supervised training with pretrained mobilenet. Faster to experiment with than resnext and want to use pretrained weights to see if we still perform at chance. Also speculating maybe resnext is just so big that is massively overfits? Still seems crazy that validation performance could be so bad though.
@@ -190,7 +205,7 @@ Takeaways:
 -Forgot to increase batch size when reverting to mobilenet.
 -Realizing this is meant to be a difficult task, hence the need for SSL (if training from scratch worked well, there'd be no need). Not sure if transfer learning is expected to work well here or not - in some situations it's not an option (probably no massive pretrained models for some specific types of medical images) so I don't know what to make of this result. Imagewang leaderboard tops out around ~65% accuracy for this size of image which doesn't sound amazing, but that's actually doing better than my pretrained imagenet models :| .
 
-V6
+v6
 --
 Summary:
 Same as v5 but with random weights. 
@@ -204,7 +219,7 @@ Epoch time (train): ~1min
 Takeaways:
 -v6's val acc was still consistently improving but loss wasn't so it was stopped prematurely.
 
-V7
+v7
 --
 Summary:
 Same as v6 but monitor accuracy instead of loss for early stopping 
@@ -218,7 +233,21 @@ Epoch time (train): ~45s
 Takeaways:
 -Bug in s01, needed to update earlystopper callback when monitoring different quantity. >:(
 
-V8
+v8
+--
+Summary:
+Mobilenet w/ random weights.
+
+Approximate Stats:
+GPU Memory Usage: 
+GPU Utilization: 
+Epoch time (train): ~15s when head is frozen, ~45s afterwards
+
+Takeaways:
+CPU Memory: 
+-Nearly 0% accuracy on validation set??? [UPDATE: not sure what I was looking at. Looks like val acc got up to ~27%, still not great but def better than chance.]
+
+v9
 --
 Summary:
 Try loading weights from mobilenet SSL v4.
@@ -232,3 +261,16 @@ Epoch time (train): ~15s when head is frozen, ~45s afterwards
 Takeaways:
 -Nearly 0% accuracy on validation set???
 
+v10
+---
+Summary:
+Try loading weights from mobilenet SSL v8 (channel shuffle).
+
+Approximate Stats:
+GPU Memory Usage: 
+GPU Utilization: 
+CPU Memory: 
+Epoch time (train): ~15s when head is frozen, ~45s afterwards
+
+Takeaways:
+-8% val accuracy.
