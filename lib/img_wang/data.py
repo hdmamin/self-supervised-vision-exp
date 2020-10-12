@@ -15,7 +15,7 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import warnings
 
-from htools import Args, valuecheck, BasicPipeline, identity, func_name
+from htools import Args, valuecheck, BasicPipeline, identity, func_name, hasarg
 from img_wang.torch_utils import rand_choice, flip_tensor, random_noise
 
 
@@ -624,7 +624,9 @@ class AlbumentationsDataset(Dataset):
         self.shape = shape
         self.pct_pos = pct_pos
         self.load_img = load_image
-        self.tfm = getattr(A, tfm)(always_apply=True)
+        tfm = getattr(A, tfm)
+        tfm_kwargs = {'p': 1.0} if hasarg(tfm, 'p') else {}
+        self.tfm = tfm(always_apply=True, **tfm_kwargs)
         self.tfm_pipeline = A.Compose([A.Resize(*shape),
                                        ToTensorV2()])
 
@@ -691,6 +693,20 @@ def patchwork_collate_fn(rows):
     x, y = map(torch.stack, zip(*rows))
     x.idx = [row[0].idx for row in rows]
     return x, y
+
+
+def worker_init_fn(worker_id):
+    """For dataloaders with num_workers > 1, each thread will generate the
+    same sequence of random numbers as all the other threads by default. This
+    allows us to set different seeds for each worker.
+
+    Note: here I'm using settings seeds to be 1, 2, ... n_workers. I avoided
+    using torch.initial_seed() or np.random.get_state()[1][0] since that
+    sometimes produced errors (I guess as random state updates, we might get a
+    number near the max possible number, and adding the worker_id can produce
+    an invalid seed.
+    """
+    np.random.seed(1 + worker_id)
 
 
 @valuecheck
@@ -787,7 +803,7 @@ def get_databunch(
     collate_fn = eval(f'{mode}_collate_fn') if collate_custom else None
     dlt = DataLoader(dst, bs, drop_last=drop_last, shuffle=shuffle_train,
                      num_workers=num_workers, pin_memory=pin_memory,
-                     collate_fn=collate_fn)
+                     collate_fn=collate_fn, worker_init_fn=worker_init_fn)
     dlv = DataLoader(dsv, int(bs * valid_bs_mult), drop_last=False,
                      num_workers=num_workers, pin_memory=pin_memory,
                      collate_fn=collate_fn)
