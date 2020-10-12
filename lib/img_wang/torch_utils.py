@@ -41,6 +41,78 @@ def summarize_acts(acts):
     plt.show()
 
 
+class PredictionExaminer:
+    """TODO: think more about desired interface. Do I want to focus on true
+    class, mistake type, error magnitude, all of the above, etc.?"""
+
+    def __init__(self, trainer, dl='val'):
+        self.trainer = trainer
+        self.dl = getattr(trainer, f'dl_{dl}') if isinstance(dl, str) else dl
+        if 'random' in type(self.dl.batch_sampler.sampler).__name__.lower():
+            self.dl = DataLoader(self.dl.dataset, self.dl.batch_size,
+                                 shuffle=False, num_workers=dl.num_workers)
+        self.df = None
+
+    def evaluate(self, return_df=True):
+        _, y_proba, y_true = self.trainer.validate(self.dl, True, True,
+                                                   logits=False)
+
+        if self.trainer.mode == 'multiclass':
+            y_proba, y_pred = y_proba.max(-1)
+        else:
+            y_pred = y_proba > self.trainer.threshold
+
+        # Construct title strings.
+        titles = [
+            f'True: {y.item()}\nPred: {pred.item()} (p={proba.item():.3f})'
+            for y, proba, pred in zip(y_true, y_proba, y_pred)
+        ]
+        df = pd.DataFrame(
+            {'y': y_true.squeeze(-1).cpu().numpy(),
+             'y_pred': y_pred.cpu().numpy(),
+             'y_proba': y_proba.squeeze(-1).cpu().numpy(),
+             'title': titles}
+        )
+        df['correct'] = (df.y == df.y_pred)
+        df = df.lambda_sort(
+            lambda x: np.where(x.correct, -1, 1) * x.y_proba, ascending=False
+        )
+        self.df = df
+        if return_df: return df
+
+    def _display_base(self, n=16, return_df=True):
+        # TODO: consider whether we can make this general enough to handle
+        # non-images too. Probably not yet.
+        # TODO: consider whether we should sort and/or return self.df depending
+        # on what use asks for (most wrong, least wrong, etc.).
+        df = self.df
+        idx = df.index.values
+        images = [torch.cat(self.dl.dataset[i][:-1], dim=-1) for i in idx[:n]]
+        show_images(images,
+                    nrows=int(np.ceil(np.sqrt(n))),
+                    titles=[self.df.loc[i, 'title'] for i in idx[:n]])
+        plt.tight_layout()
+        if return_df: return df
+
+    def most_wrong(self):
+        pass
+
+    def least_wrong(self):
+        pass
+
+    def most_correct(self):
+        pass
+
+    def random(self):
+        pass
+
+    def false_positives(self):
+        pass
+
+    def false_negatives(self):
+        pass
+
+
 def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16):
     """Find the biggest mistakes made on a single batch or on a whole dataset
     and displays the corresponding images along with their labels and

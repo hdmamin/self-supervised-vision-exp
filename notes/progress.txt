@@ -449,9 +449,17 @@ Plans: Examine results of v9 (elastictransform SSL). Test out get_databunch in a
 
 10/11/20
 --------
+Progress: Examined elastictransform SSL results in comet, and used notebook to confirm that the databunch works with it as expected. Found and fixed bug where dataloader with num_workers > 0 was generating the same random numbers for each worker (used worker_init_fn in dataloader init). Updated albumentations dataset to adjust param p if it has one (verticalflip, for instance, uses that instead of always_apply). Launched new training run with verticalflip SSL task. Started working on new PredictionExaminer class (picturing a more fleshed out version of top_mistakes, similar to what I built for Dune).
+
+Plans: Examine results of SSL v10 (verticalflip). Continue work on PredictionExaminer: in addition to coding, this deserves a fair bit of thought about what interfaces I want to provide since I intend for this to end up in Incendio.
+
+10/12/20
+--------
 Progress:
 
 Plans:
+
+
 
 
 
