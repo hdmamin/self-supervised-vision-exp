@@ -111,6 +111,14 @@ def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16):
 
 
 def reproducible(seed=1, verbose=True):
+    """Make training reproducible by setting seeds for numpy, torch, random,
+    and python.
+
+    Parameters
+    ----------
+    seed: int
+    verbose: bool
+    """
     if verbose: print('Setting seeds for reproducible training.')
     os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
@@ -120,7 +128,21 @@ def reproducible(seed=1, verbose=True):
     torch.backends.cudnn.benchmark = False
 
 
-def gpu_setup(make_reproducible=True, seed=1, verbose=1):
+def gpu_setup(make_reproducible=True, seed=1, verbose=True):
+    """Check that gpu is available and optionally set random seeds for
+    reproducible training.
+
+    Parameters
+    ----------
+    make_reproducible: bool
+        If True, set seeds for random, numpy, torch, and python.
+    seed: int
+        Used to set all random seeds if make_reproducible is True.
+    verbose: bool
+        Passed on to `reproducible` function. If a GPU is not available,
+        warnings will occur regardless of this parameter since this contains
+        important information.
+    """
     if make_reproducible: reproducible(seed, verbose)
     if not torch.cuda.is_available(): warnings.warn('Cuda not available.')
     if DEVICE.type != 'cuda': warnings.warn('Incendio device is not cuda.')
