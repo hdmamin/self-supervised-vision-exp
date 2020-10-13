@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import SequentialSampler, BatchSampler, DataLoader
 import warnings
 
-from htools import lmap
+from htools import lmap, add_docstring, select, valuecheck
 from incendio.core import DEVICE
 
 
@@ -42,8 +42,10 @@ def summarize_acts(acts):
 
 
 class PredictionExaminer:
-    """TODO: think more about desired interface. Do I want to focus on true
-    class, mistake type, error magnitude, all of the above, etc.?"""
+    """Examine model predictions. This lets us view rows where the model was
+    very confidently wrong, barely wrong, confidently right, barely right, or
+    just random rows.
+    """
 
     def __init__(self, trainer, dl='val'):
         self.trainer = trainer
@@ -74,43 +76,92 @@ class PredictionExaminer:
              'title': titles}
         )
         df['correct'] = (df.y == df.y_pred)
-        df = df.lambda_sort(
-            lambda x: np.where(x.correct, -1, 1) * x.y_proba, ascending=False
-        )
-        self.df = df
+        # Score of 1 means model was certain of correct answer.
+        # Score of -1 means model was certain of incorrect answer.
+        # By default, sort with biggest mistakes at top. Don't reset index.
+        df['mistake'] = np.where(df.correct, -1, 1) * df.y_proba
+        self.df = df.sort_values('score', ascending=False)
         if return_df: return df
 
-    def _display_base(self, n=16, return_df=True):
-        # TODO: consider whether we can make this general enough to handle
-        # non-images too. Probably not yet.
-        # TODO: consider whether we should sort and/or return self.df depending
-        # on what use asks for (most wrong, least wrong, etc.).
+    @valuecheck
+    def _select_base(self, mode='most_wrong', n=16, pred_classes=None,
+                     true_classes=None, return_df=False):
+        """Internal method that provides the functionality for all user-facing
+        methods for filtering and displaying results.
+
+        Parameters
+        ----------
+        mode: str
+            One of ('most_wrong', 'least_wrong', 'most_correct',
+            'least_correct', 'random'). "wrong/correct" refers to whether the
+            predicted class matches the true class, while "most/least"
+            considers the model's confidence as well. I.E. "most_wrong" means
+            rows where the model predicted the wrong class with high
+            confidence.
+        n: int
+            Number of images to display.
+        pred_classes: Iterable[str] or None
+            If provided, only show rows where the true label falls into these
+            specific classes.
+        true_classes: Iterable[str] or None
+            If provided, only show rows where the predicted label falls into
+            these specific classes.
+        return_df: bool
+
+        Returns
+        -------
+        pd.DataFrame or None: None by default, depends on `return_df`.
+        """
+        # Filter and sort rows based on desired classes and criteria.
         df = self.df
-        idx = df.index.values
-        images = [torch.cat(self.dl.dataset[i][:-1], dim=-1) for i in idx[:n]]
+        if pred_classes is not None:
+            if isinstance(pred_classes, int): pred_classes = [pred_classes]
+            df = df.loc[df.y_pred.isin(pred_classes)]
+        if true_classes is not None:
+            if isinstance(true_classes, int): true_classes = [true_classes]
+            df = df.loc[df.y_true.isin(true_classes)]
+        if mode == 'most_wrong':
+            df = df[~df.correct].sort_values('mistake', ascending=False)
+        elif mode == 'least_wrong':
+            df = df[~df.correct].sort_values('mistake', ascending=True)
+        elif mode == 'most_correct':
+            df = df[df.correct].sort_values('mistake', ascending=True)
+        elif mode == 'least_correct':
+            df = df[df.correct].sort_values('mistake', ascending=False)
+        elif mode == 'random':
+            df = df.sample(frac=1, replace=False)
+        idx = df.index.values[:n]
+
+        # Display images for selected rows.
+        images = [torch.cat(self.dl.dataset[i][:-1], dim=-1) for i in idx]
         show_images(images,
                     nrows=int(np.ceil(np.sqrt(n))),
-                    titles=[self.df.loc[i, 'title'] for i in idx[:n]])
+                    titles=[self.df.loc[i, 'title'] for i in idx])
         plt.tight_layout()
         if return_df: return df
 
-    def most_wrong(self):
-        pass
+    @add_docstring(self._select_base)
+    def most_wrong(self, **kwargs):
+        return self._select_base('most_wrong', **select(kwargs, drop=['mode']))
 
-    def least_wrong(self):
-        pass
+    @add_docstring(self._select_base)
+    def least_wrong(self, **kwargs):
+        return self._select_base('least_wrong',
+                                 **select(kwargs, drop=['mode']))
 
-    def most_correct(self):
-        pass
+    @add_docstring(self._select_base)
+    def most_correct(self, **kwargs):
+        return self._select_base('most_correct',
+                                 **select(kwargs, drop=['mode']))
 
-    def random(self):
-        pass
+    @add_docstring(self._select_base)
+    def least_correct(self, **kwargs):
+        return self._select_base('least_correct',
+                                 **select(kwargs, drop=['mode']))
 
-    def false_positives(self):
-        pass
-
-    def false_negatives(self):
-        pass
+    @add_docstring(self._select_base)
+    def random(self, **kwargs):
+        return self._select_base('random', **select(kwargs, drop=['mode']))
 
 
 def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16):

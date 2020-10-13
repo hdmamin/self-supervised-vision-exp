@@ -274,3 +274,12 @@ Epoch time (train): ~15s when head is frozen, ~45s afterwards
 
 Takeaways:
 -8% val accuracy.
+
+v11
+---
+Summary:
+Transfer from vertical flip task. Also tried unfreezing the encoder a bit earlier and using higher encoder LR than before.
+
+Takeaways:
+-8% val accuracy.
+

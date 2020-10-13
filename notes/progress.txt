@@ -455,15 +455,13 @@ Plans: Examine results of SSL v10 (verticalflip). Continue work on PredictionExa
 
 10/12/20
 --------
-Progress:
+Progress: Briefly examined results of SSL v10 (pretty good) and launched sup v11 (transferring from SSL v10 - better than chance but not great). Launched sup v12 (transferring from SSL v9, elastic transform). Updated incendio trainer to not accept datasets in init but didn't merge to master yet - if I want to make any incendio changes to use in img_wang, I need to keep the Trainer interface consistent. Planned out interface of PredictionExaminer and tentatively finished an untested draft of it, exposing 5 different options for viewing results.
 
-Plans:
+Plans: Examine results of sup v12. Try out new PredictionExaminer class.
 
+10/13/20
+--------
+Progress: 
 
-
-
-
-
-
-
+Plans: 
 
