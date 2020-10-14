@@ -52,7 +52,8 @@ class PredictionExaminer:
         self.dl = getattr(trainer, f'dl_{dl}') if isinstance(dl, str) else dl
         if 'random' in type(self.dl.batch_sampler.sampler).__name__.lower():
             self.dl = DataLoader(self.dl.dataset, self.dl.batch_size,
-                                 shuffle=False, num_workers=dl.num_workers)
+                                 shuffle=False,
+                                 num_workers=self.dl.num_workers)
         self.df = None
 
     def evaluate(self, return_df=True):
@@ -80,8 +81,8 @@ class PredictionExaminer:
         # Score of -1 means model was certain of incorrect answer.
         # By default, sort with biggest mistakes at top. Don't reset index.
         df['mistake'] = np.where(df.correct, -1, 1) * df.y_proba
-        self.df = df.sort_values('score', ascending=False)
-        if return_df: return df
+        self.df = df.sort_values('mistake', ascending=False)
+        if return_df: return self.df
 
     @valuecheck
     def _select_base(self, mode='most_wrong', n=16, pred_classes=None,
@@ -119,7 +120,7 @@ class PredictionExaminer:
             df = df.loc[df.y_pred.isin(pred_classes)]
         if true_classes is not None:
             if isinstance(true_classes, int): true_classes = [true_classes]
-            df = df.loc[df.y_true.isin(true_classes)]
+            df = df.loc[df.y.isin(true_classes)]
         if mode == 'most_wrong':
             df = df[~df.correct].sort_values('mistake', ascending=False)
         elif mode == 'least_wrong':
@@ -140,28 +141,41 @@ class PredictionExaminer:
         plt.tight_layout()
         if return_df: return df
 
-    @add_docstring(self._select_base)
-    def most_wrong(self, **kwargs):
-        return self._select_base('most_wrong', **select(kwargs, drop=['mode']))
+    def most_wrong(self, n=16, pred_classes=None, true_classes=None,
+                   return_df=False):
+        return self._select_base('most_wrong', n, pred_classes, true_classes,
+                                 return_df)
 
-    @add_docstring(self._select_base)
-    def least_wrong(self, **kwargs):
-        return self._select_base('least_wrong',
-                                 **select(kwargs, drop=['mode']))
+    def least_wrong(self, n=16, pred_classes=None, true_classes=None,
+                    return_df=False):
+        return self._select_base('least_wrong', n, pred_classes, true_classes,
+                                 return_df)
 
-    @add_docstring(self._select_base)
-    def most_correct(self, **kwargs):
-        return self._select_base('most_correct',
-                                 **select(kwargs, drop=['mode']))
+    def most_correct(self, n=16, pred_classes=None, true_classes=None,
+                     return_df=False):
+        return self._select_base('most_correct', n, pred_classes, true_classes,
+                                 return_df)
 
-    @add_docstring(self._select_base)
-    def least_correct(self, **kwargs):
-        return self._select_base('least_correct',
-                                 **select(kwargs, drop=['mode']))
+    def least_correct(self, n=16, pred_classes=None, true_classes=None,
+                      return_df=False):
+        return self._select_base('least_correct', n, pred_classes,
+                                 true_classes, return_df)
 
-    @add_docstring(self._select_base)
-    def random(self, **kwargs):
-        return self._select_base('random', **select(kwargs, drop=['mode']))
+    def random(self, n=16, pred_classes=None, true_classes=None,
+               return_df=False):
+        return self._select_base('random', n, pred_classes, true_classes,
+                                 return_df)
+
+    def class_to_top_mistakes(self, n=3):
+        df = self.df
+        return {lbl: dict(df.loc[(~df.correct) & (df.y == lbl),
+                                 'y_pred'].value_counts().head(n))
+                for lbl in df.y.unique()}
+
+    def confusion_matrix(self):
+        return pd.pivot_table(self.df, index='y', columns='y_pred',
+                              values='title', aggfunc=len, fill_value=0)\
+                 .style.background_gradient(axis=1)
 
 
 def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16):

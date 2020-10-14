@@ -461,6 +461,12 @@ Plans: Examine results of sup v12. Try out new PredictionExaminer class.
 
 10/13/20
 --------
+Progress: Briefly examined sup v12 results (okay) and added tags in comet. Wrote some docs and cleaned up a couple outstanding comments in models.py. Tried out PredictionExaminer in a notebook and made a few fixes (e.g. add_docstring was throwing error, changed **kwargs to separate kwargs). Also ported my confusion matrix func as a new method and added one that returns a dict of most common errors for each true class.
+
+Plans: Look at more models with PredictionExaminer. Maybe add more functionality (ex: passing new dataloaders to same examiner object, highlighting mistakes when showing random predictions), better confusion matrix (maybe using sklearn, otherwise insert rows so there aren't any missing), allow evaluating on a single batch, think if there's a better way to show class_to_top_mistakes).
+
+10/14/20
+--------
 Progress: 
 
 Plans: 
