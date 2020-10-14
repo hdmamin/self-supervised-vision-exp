@@ -83,20 +83,38 @@ class Encoder(BaseModel):
     def __init__(self, n=3, c_in=3, fs=(8, 16, 32, 64, 128, 256),
                  strides=(2, 2, 1, 1, 1, 1), kernel_size=3, norm=True,
                  padding=0, act=Mish(), res_blocks=0, **res_kwargs):
-        """TODO: encoder docs
+        """Convolutional encoder with optional residual blocks for my original
+        series of tasks which input multiple images. Eventually
+        ended up largely abandoning this in favor of pre-made architectures
+        since there's nothing special going on here: it's just a standard
+        convlutional stack.
 
         Parameters
         ----------
-        n
-        c_in
-        fs
-        strides
-        kernel_size
-        norm
-        padding
-        act
-        res_blocks
-        res_kwargs
+        n: int
+            Number of images in dataset task. Honestly forget why the model
+            needs this.
+        c_in: int
+            Number of input channels.
+        fs: Iterable[int]
+            Number of output channels for each convolutional layer in the
+            model. This can be any length but keep in mind `strides` must match
+            it.
+        strides: Iterable[int]
+            Stride for each convolutional layer. Must match length of `fs`.
+        kernel_size: int
+            Passed on to ConvBlock layers.
+        norm: bool
+            Passed on to ConvBlock layers.
+        padding: int
+            Passed on to ConvBlock layers.
+        act: callable
+            Activation function in the form of a nn.Module or functional
+            equivalent.
+        res_blocks: int
+            Determines the number of residual blocks to use (if any).
+        res_kwargs: any
+            Additional kwargs passed to ResBlock layers if res_blocks > 0.
         """
         super().__init__()
         if len(fs) != len(strides):
@@ -306,7 +324,7 @@ class MLPHead(ClassificationHead):
             If True, add batch norm after each linear layer. Early training
             results without batch norm suggest we may be suffering from
             saturated neurons, so this may help.
-            # TODO: see if this works, but might want to remove it here and
+            # Note: see if this works, but might want to remove it here and
             place it after the concat pool instead. Read on stack that bn
             before the final layer can cause problems since it's introducing
             noise very late in the network and only leaves us 1 layer to learn
@@ -346,7 +364,7 @@ class MLPHead(ClassificationHead):
         # call for a different Head implementation. Originally built
         # ElementwiseMult for the purpose of making it easier to swap between
         # that and CosineSimilarity. It's no longer a necessary abstraction
-        # but I'll leave it # for now.
+        # but I'll leave it for now.
         self.mult = ElementwiseMult()
         self.n_layers = len(fs)
         layers = []
@@ -354,9 +372,9 @@ class MLPHead(ClassificationHead):
             layers.append(nn.Linear(f_in, f_out))
             if i < self.n_layers:
                 if batch_norm: layers.append(nn.BatchNorm1d(ds_n, eps=1e-3))
-                # TODO: maybe when switching to sequential, this line caused
-                # a new problem: same activation obj after each layer. Though
-                # I guess in the default case there's still only 1.
+                # Note: same activation obj is added after each layer but it
+                # doesn't have weights so I think it's okay. Also, in the
+                # default case this is only called once.
                 layers.append(act)
             elif bias_trick:
                 # No batch norm or activation added in this case so fc is last.
