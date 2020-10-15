@@ -8,7 +8,7 @@ import torch
 from torch.utils.data import SequentialSampler, BatchSampler, DataLoader
 import warnings
 
-from htools import lmap, add_docstring, select, valuecheck
+from htools import lmap, add_docstring, select, valuecheck, pd_tools
 from incendio.core import DEVICE
 
 
@@ -50,7 +50,7 @@ class PredictionExaminer:
     def __init__(self, trainer):
         self.trainer = trainer
         self.dls = {}
-        self.df = {}
+        self.dfs = {}
 
         # self.dl = getattr(trainer, f'dl_{dl}') if isinstance(dl, str) else dl
         # if 'random' in type(self.dl.batch_sampler.sampler).__name__.lower():
@@ -58,12 +58,12 @@ class PredictionExaminer:
         #                          shuffle=False,
         #                          num_workers=self.dl.num_workers)
 
-    def evaluate(self, dl='val', return_df=True):
-        dl, dl_str = getattr(self.trainer, f'dl_{dl}'), dl
+    def evaluate(self, split='val', return_df=True):
+        dl = getattr(self.trainer, f'dl_{split}')
         if 'random' in type(dl.batch_sampler.sampler).__name__.lower():
             dl = DataLoader(dl.dataset, dl.batch_size, shuffle=False,
                             num_workers=dl.num_workers)
-        self.dls[dl_str] = dl
+        self.dls[split] = dl
         _, y_proba, y_true = self.trainer.validate(dl, True, True,
                                                    logits=False)
 
@@ -89,11 +89,11 @@ class PredictionExaminer:
         # By default, sort with biggest mistakes at top. Don't reset index.
         df['mistake'] = np.where(df.correct, -1, 1) * df.y_proba
         df.sort_values('mistake', ascending=False, inplace=True)
-        self.dfs[dl_str] = df
+        self.dfs[split] = df
         if return_df: return df.drop('title', axis=1)
 
     @valuecheck
-    def _select_base(self, mode='most_wrong', dl='val', n=16,
+    def _select_base(self, mode='most_wrong', split='val', n=16,
                      pred_classes=None, true_classes=None, return_df=False):
         """Internal method that provides the functionality for all user-facing
         methods for filtering and displaying results.
@@ -122,7 +122,7 @@ class PredictionExaminer:
         pd.DataFrame or None: None by default, depends on `return_df`.
         """
         # Filter and sort rows based on desired classes and criteria.
-        df, dl = self.dfs[dl], self.dls[dl]
+        df, dl = self.dfs[split], self.dls[split]
         if pred_classes is not None:
             if isinstance(pred_classes, int): pred_classes = [pred_classes]
             df = df.loc[df.y_pred.isin(pred_classes)]
@@ -139,50 +139,63 @@ class PredictionExaminer:
             df = df[df.correct].sort_values('mistake', ascending=False)
         elif mode == 'random':
             df = df.sample(frac=1, replace=False)
+        if df.empty:
+            warnings.warn('No examples meet that criteria.')
+            return
         idx = df.index.values[:n]
 
         # Display images for selected rows.
         images = [torch.cat(dl.dataset[i][:-1], dim=-1) for i in idx]
         show_images(images, nrows=int(np.ceil(np.sqrt(n))),
-                    titles=[self.df.loc[i, 'title'] for i in idx])
+                    titles=[df.loc[i, 'title'] for i in idx])
         plt.tight_layout()
         if return_df: return df.dropna('title', axis=1)
 
-    def most_wrong(self, dl='val', n=16, pred_classes=None, true_classes=None,
+    def most_wrong(self, split='val', n=16, pred_classes=None, true_classes=None,
                    return_df=False):
-        return self._select_base('most_wrong', dl, n, pred_classes,
+        return self._select_base('most_wrong', split, n, pred_classes,
                                  true_classes, return_df)
 
-    def least_wrong(self, dl='val', n=16, pred_classes=None, true_classes=None,
+    def least_wrong(self, split='val', n=16, pred_classes=None, true_classes=None,
                     return_df=False):
-        return self._select_base('least_wrong', dl, n, pred_classes,
+        return self._select_base('least_wrong', split, n, pred_classes,
                                  true_classes, return_df)
 
-    def most_correct(self, dl='val', n=16, pred_classes=None,
+    def most_correct(self, split='val', n=16, pred_classes=None,
                      true_classes=None, return_df=False):
-        return self._select_base('most_correct', dl, n, pred_classes,
+        return self._select_base('most_correct', split, n, pred_classes,
                                  true_classes, return_df)
 
-    def least_correct(self, dl='val', n=16, pred_classes=None,
+    def least_correct(self, split='val', n=16, pred_classes=None,
                       true_classes=None, return_df=False):
-        return self._select_base('least_correct', dl, n, pred_classes,
+        return self._select_base('least_correct', split, n, pred_classes,
                                  true_classes, return_df)
 
-    def random(self, dl='val', n=16, pred_classes=None, true_classes=None,
+    def random(self, split='val', n=16, pred_classes=None, true_classes=None,
                return_df=False):
-        return self._select_base('random', dl, n, pred_classes, true_classes,
-                                 return_df)
+        return self._select_base('random', split, n, pred_classes,
+                                 true_classes, return_df)
 
-    def class_to_top_mistakes(self, dl='val', n=3):
-        df = self.dfs[dl]
+    def class_to_top_mistakes(self, split='val', n=3):
+        df = self.dfs[split]
         return {lbl: dict(df.loc[(~df.correct) & (df.y == lbl),
                                  'y_pred'].value_counts().head(n))
                 for lbl in df.y.unique()}
 
-    def confusion_matrix(self, dl='val'):
-        return pd.pivot_table(self.dfs[dl], index='y', columns='y_pred',
-                              values='title', aggfunc=len, fill_value=0)\
-                 .style.background_gradient(axis=1)
+    def confusion_matrix(self, split='val'):
+        cm = pd.pivot_table(self.dfs[split], index='y', columns='y_pred',
+                            values='title', aggfunc=len, fill_value=0)
+        if len(set(cm.shape)) > 1 or not (cm.index == cm.columns).all():
+            short_ax = np.argmin(cm.shape)
+            cm = cm.reindex(cm.index.values if short_ax == 1
+                            else cm.columns.values, axis=short_ax).fillna(0)
+        return cm.style.background_gradient(axis=1)
+
+    def label_vcounts(self, split='val'):
+        return self.dfs[split].y_pred.vcounts()
+
+    def pred_vcounts(self, split='val'):
+        return self.dfs[split].y.vcounts()
 
 
 def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16):

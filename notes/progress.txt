@@ -467,6 +467,12 @@ Plans: Look at more models with PredictionExaminer. Maybe add more functionality
 
 10/14/20
 --------
+Progress: Updated PredictionExaminer to handle multiple dataloaders. Updated its confusion matrix method to insert extra rows columns if necessary. Used it to start examining v5 (pretrained mobilenet) and v12 (transferred from elastictransform task).
+
+Plans: Do a little more exploration of model predictions. Maybe port PredictionExaminer to incendio. Take another look at metrics, project requirements, todos, etc. and start considering whether to wrap this up or try an extension (e.g. likely siamese net).
+
+10/15/20
+--------
 Progress: 
 
 Plans: 
