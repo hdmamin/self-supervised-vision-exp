@@ -70,7 +70,7 @@ class PredictionExaminer:
         if self.trainer.mode == 'multiclass':
             y_proba, y_pred = y_proba.max(-1)
         else:
-            y_pred = y_proba > self.trainer.threshold
+            y_pred = (y_proba > self.trainer.thresh).float()
 
         # Construct title strings.
         titles = [
@@ -79,7 +79,7 @@ class PredictionExaminer:
         ]
         df = pd.DataFrame(
             {'y': y_true.squeeze(-1).cpu().numpy(),
-             'y_pred': y_pred.cpu().numpy(),
+             'y_pred': y_pred.squeeze(-1).cpu().numpy(),
              'y_proba': y_proba.squeeze(-1).cpu().numpy(),
              'title': titles}
         )
@@ -191,11 +191,11 @@ class PredictionExaminer:
                             else cm.columns.values, axis=short_ax).fillna(0)
         return cm.style.background_gradient(axis=1)
 
-    def label_vcounts(self, split='val'):
-        return self.dfs[split].y_pred.vcounts()
+    def label_vcounts(self, split='val', n=None):
+        return self.dfs[split].y_pred.vcounts().head(n)
 
-    def pred_vcounts(self, split='val'):
-        return self.dfs[split].y.vcounts()
+    def pred_vcounts(self, split='val', n=None):
+        return self.dfs[split].y.vcounts().head(n)
 
 
 def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16):
@@ -237,7 +237,7 @@ def top_mistakes(trainer, xb=None, yb=None, dl=None, n=16):
     if trainer.mode == 'multiclass':
         y_proba, y_pred = y_proba.max(-1)
     else:
-        y_pred = y_proba > trainer.threshold
+        y_pred = y_proba > trainer.thresh
 
     # Construct title strings.
     titles = []

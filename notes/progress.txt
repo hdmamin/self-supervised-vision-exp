@@ -473,7 +473,14 @@ Plans: Do a little more exploration of model predictions. Maybe port PredictionE
 
 10/15/20
 --------
-Progress: 
+Progress: Examined predictions from another supervised model (transferring from channel shuffle task) and a self-supervised model (elastic transform task). Made a couple adjustments to PredictionExaminer to work with binary classification and also to allow user to pass n when displaying label/prediction vcounts. Added ability to set tags in incendio cometcallback. Explored Comet UI a little more and tried adjusting the columns displayed. Reviewed project requirements and confirmed that I've met them, though perhaps not in spirit.
 
-Plans: 
+Plans: We're at a bit of a crossroads: I'm very tempted to wrap this up, write a post-mortem, and be done. But I can feel that Siamese net calling...maybe I can come back to that in a bit on a text task. I'm thinking it may be time to move on from img wang because a. it's been super frustrating so a change of pace would be good, b. it's a hard task and it makes it kind of hard to tell when something's buggy vs. just not that effective, c. I don't want to get stuck working on the wrong task - this was supposed to be a simple intro to SSL and it got a little out of hand - and I have other interesting ideas I could be working on. Alternately or in addition: I could port PredictionExaminer to incendio, work on a show_images function of my own to remove the fastai2 dependency, add method to get metrics, and/or generalize the class a bit to make it compatible with other (e.g. text) data. Can also go through the rest of my img_wang code to see if there's anything else worth porting to incendio. Also, should consider what I want to do about CLIHandler: since the purpose of this project was largely to lower the barriers to experimentation, I might consider that within scope, in which case I should begin planning the interface.
+
+10/16/20
+--------
+Progress:
+
+Plans:
+
 
