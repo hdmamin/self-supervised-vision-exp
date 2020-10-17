@@ -268,3 +268,98 @@ Kornia - python package that looks like it lets us do image transforms on tensor
 -noticed fastai siamese net tutorial calls encoder twice inside forward method, so I don't think this caused a problem in terms of computing gradients when I did this. I still wonder if stacking these as a batch would save a significant amount of time when the model is big, but maybe it doesn't matter much.
 -also noticed they simply concat encoder outputs along dim=1 (i.e. encoder might output 2 (bs, 512) tensors which we concat into 1 (bs, 1024) tensor. Slightly surprised this would work well compared to a similarity-based approach.
 
+10/16/20
+--------
+items to port to incendio:
+    -data.RandomTransform
+            -data.ImageMixer
+    -callbacks.CometCallbackWithGrads
+    -losses.PairwiseLossReduction
+            -losses.contrastive_loss, losses.ContrastiveLoss1d, losses.ContrastiveLoss2d
+    -torch_utils.PredictionExaminer
+            -torch_utils.n_out_channels
+    -models.load_encoder (thought should probably rewrite this as a method of Trainer, basemodel, or similar)
+        -models.MultiInputEncoder (should flesh out docs a little, maybe add shape info)
+        -models.SmoothSoftmaxBase, models.SmoothSoftmax, models.SmoothLogSoftmax
+
+Post-Mortem
+-----------
+Also on 10/16/20. Most of the text below is copied from the pre-mortem with updates specifically marked: [UPDATE: update here].
+
+***
+
+Deadline: 9/30/20 for part 1 (image wang + fastai2 experiment). I suspect this will get done a lot faster and I can move on to experiment with additional methods or other datasets/libraries. However, in the interest of removing time pressure I'm setting aside a lot of time to play with this.
+[UPDATE: Initially it looked like I'd zip through this very quickly (the imagemixer dataset came together in a day or two, I think) but the project ended up stretching on for ages. I think some of the issues were never solved, while others just ended with me realizing this is just a hard task in general. I'm not too concerned with deadlines for these so going over is fine as long as I'm working consistently. The trickier part, I'm realizing, is defining clear ways to tell when a project is done. Even tonight, I was very close to extending this project further in a way that easily could have taken months. In future projects, try to think carefully about what defines "done".]
+
+Final Product: 1 or more of the following:
+    -Just a standard project with notebooks and py files as needed.
+    [UPDATE: done]
+
+    Optionally, this could include 1 or more of the following:
+    -Blog post on using fastai, SSL, etc. Probably will skip this though.
+    [UPDATE: skipped. Maybe if this worked better I'd consider it, but as is I'm just annoyed with this task and want to move on.]
+    -App that visualizes something about the self-supervised model hidden states? Probably skip this too. I like making apps but I just spent a ton of time on streamlit in my last project and this is meant to be more about trying stuff out in torch/fastai.
+    [UPDATE: skipped. I got a lot of streamlit work in with the stormlight app and at work so this wasn't something I really wanted to take on at the moment.]
+
+Concepts: 
+    -self-supervised learning
+    [UPDATE: met my very vague requirements, but I didn't end up delving that deep into the subject because I was stuck endlessly debugging my models that refused to learn. I still think my mixup task was super cool and I'm happy with how I translated that Happy Neuron cognitive task into code, but I never really got that excited about any of the tasks that followed. So my supicion that coming up with SSL tasks and building the associated datasets would be fun was kind of right, but this fun was heavily dampened by a need to devise simpler and simpler tasks for debugging purposes.]
+    -optional: might be cool to try some generative models and see if they could help on this task somehow. VAE would be fun.
+Tech: 
+    -CometML - Set up experiment-monitoring environment. This was a "nice to have" last time but this time I'm considering it a requirement.
+    [UPDATE: this went pretty well. I'm starting to get decently comfortable with the UI and I made some updates to my CometCallback to set training run name, tags, and optionally plot gradient magnitudes.]
+    -FastAI - This is another point that moved from "nice to have" to "requirement". If I like this kind of project, I can try pytorch lightning or revert to incendio next time, but for the sake of clarity I want to make this very simple: part 1 at least must use fastai.
+    [UPDATE: technically fulfilled the specific requirements I outlined later but didn't really follow this in spirit. I ended up with the dreaded trifecta: experimenting in fastai, lightning, and incendio. I ultimately ended up favoring incendio for this purpose. I think I've concluded that fastai's api is so weird and confusing I'd usually rather just do everything in torch. In that case, I should probably make an effort going forward to move over to lightning, but I found it just annoying enough to tempt me into sticking with incendio for now. Slightly disappointing, but on the other hand fixing up incendio was one of the few parts of this project I enjoyed so it's not all bad.]
+Requirements:
+    -Implement >=1 custom self-supervised learning method on imagewang and evaluate how it transfers to a supervised task. Ideally, I'm envisioning a longer string of self-supervised experiments, but I'm not locking that in here because I think I might prefer to do that on text (and possibly with a different library). I'm keeping the scope very limited here: imagewang, fastai, an idea, and we'll see how it goes. For the record, the idea doesn't actually have to be new or innovative: it should be slightly more original than directly copying a paper/blog post, but it's fine if someone else has done something similar or even identical. I don't need to read a ton of papers to make sure this is some novel idea, I just want to be "drawing" rather than "coloring between the lines", so as long as I'm being forced to make my own decisions, it counts.
+[UPDATE: ended up building something like half a dozen different tasks (depending on how we count variations of AlbumentationsDataset), all of my own devising. Sadly, none of them worked well.]
+    -Build at least 2 custom components in fastai2. That's pretty open-ended, but it would be nice to get a sense of the mid-level API.
+    [UPDATE: technically fulfilled this but only to meet this requirement. I built a Transform (basically a dataset) for my SSL mixup task, a fastuple subclasses (MixedImages) to represent a single item from my mixup transform, and used some fastai weirdness to define a custom show_batch function for the same dataset. Didn't use fastai for any training though - this was just an exercise that allowed me to wrap up the project without (much) guilt for giving up on fastai.]
+
+    -Experiment tracking (i.e. comet.ml). This should be an easy one to check off but I'm requiring it to make sure I don't let it slide.
+    [UPDATE: done. Covered this earlier.]
+
+Pre-Mortem:
+    What could go wrong?
+
+    -turns out fastai's high level API is so perfected for this task that I don't really have to do anything custom.
+        [SOLUTION] I set a requirement for minimum number of custom components, so even if I CAN get away with this in theory, I've already ensured that I won't give myself credit for it.
+        [UPDATE: hahahaha this didn't happen. ಠ_ಠ]
+    -my pre-training task doesn't work at all. 
+        [SOLUTION] This would be disappointing but not overly surprising. I think it would still be acceptable. One smalll variation to the requirements can be that I have to get something that at least mildly works. Or at least ensure that the model is training without obvious bugs - I don't think I can be sure that the pre-training task will be useful since I'm not sure how hard that is to come up with.
+        [UPDATE: this basically happened. I'm accepting a pretty generous definition of "mildly works". I do think I eliminated training bugs (at least for the single input tasks) and I got to a point where pre-training at least stopped actively HURTING supervised training, and after a long sequence of shockingly poor training runs, I'll take what I can get.]
+    -I end up just following along with a blog post and not trying anything original.
+        [SOLUTION] This wouldn't fulfill my requirements so I think we're okay. To be clear, I could start with that, but I'd still need to do something new afterwards. Anyway, I think I'll be okay: I found a nice blog post on SSL w/ fastai2 but it uses a different dataset and a different, simpler pre-training task than what I have in mind. It should provide a good guide without preventing me from trying new things.
+        [UPDATE: this didn't happen.]
+    -I find out that I don't like self-supervised learning or experimentation in general 
+        [SOLUTION] I guess if this happens it is what it is, but it seems pretty far-fetched given what I've liked and disliked so far.. It would be good to find this out now at least. But I can't really see this happening.
+        [UPDATE: this...kind of happened. Whoops. I guess this is a good reminder of how much uncertainty should remain in my predictions, even when it feels like I have a good handle on the situation. I still think there's something interesting here, but this project has made one thing clear: I still think DL is fascinating and want to continue working on it in some form, but I want it to be in a way where better performance metrics are not the goal. Basically, I can't stand "stirring the pile". This does give me some useful information as I continue to explore possible directions for my next project and career in general.]
+    -I implement my first idea in a day or two, then sort of lose interest. I guess this would be acceptable as long as I wrap things up enough to meet my agreed on requirements. It would be kind of annoying to have to devote energy to picking another project so soon though.
+        [SOLUTION] This seems...pretty possible. My hope is that by choosing a pretty small dataset (I think), training will be fast enough that I'll be able to iterate quickly and once I get going, I'll be hooked enough to want to improve on my previous score.
+        [UPDATE: I kind of wish this happend, but it didn't. So close but so far.]
+    -My GPU issues return and I get fed up and quit. 
+        [SOLUTION] I think I did enough setup on the last project that this is relatively unlikely. One slightly worrying issue is that the last time I tried to start my paperspace machine, the site was throwing weird errors and it never finished setting up. The other concern is that if I have to do a lot of work on GPUs, I can't just keep my work open at all times and it introduces a bigger barrier to starting each night. Maybe the dataset is small enough that CPU training is viable. That actually would be a good challenge: find a method that can be trained quickly on cpu. Realistically, actually achieving this now would be way too ambitious, but it's not a bad thing to keep in mind.
+        [UPDATE: this didn't happen, thankfully.]
+
+What went well:
+-Ultimately did get some fastai2 functionality working. Like Terence says, every unsolved bug chips away at your confidence and every solved one builds it. So the fact that I'd 99% given up but went back and got it working is a big win.
+-Incendio's actually working pretty well for my purposes. It definitely still has some limitations (in this case, it definitely made it harder to use contrastive loss, for instance, and I had to resort to ugly workarounds) but that also means I have some new ideas on how to improve it.
+-I still think my mixup idea was excellent and I'm happy with the type of thinking that lead up to it, even if it ended up basically identical to the existing data augmentation technique. But the way I found a challenging cognitive task that gets humans to quickly encode images as high level abstractions and translated the task to code was a good step.
+-I have a clearer idea of what I don't want (for model training and model performance to be the focus). It's okay if training a model is involved, I just don't want to worry about stirring the pile.
+-I think I achieved a decent balance of being persistent when things aren't working while also not allowing myself to get swept up in a year-long slog of failure.
+-As much as I was sometimes tempted to take a day off, I never did. In fact, I think I always put in >= 1 hour, which I realized is quite a step up from my intended rule of "literally any progress at all, even if it's adding a one line comment".
+
+What went poorly:
+-I didn't enjoy this as much as I expected. It was fun for a few days at the beginning when I was building everything, but then it was just a long slog of months of banging my head against a wall trying to figure out why nothing was working. Ugh.
+-I STILL don't have a super clear answer about when I'll choose fastai vs. lightning vs. incendio vs. pure torch. I think my tentative answer at the moment is use incendio for most things, making use of a few fastai models or utilities here and there, and with the intent to eventually transition from incendio to lightning.
+-I didn't use fastai anywhere as much as I intended. While I met the technical requirements, I didn't reach the level of fastai usage I intended to.
+-None of the tasks turned out to be particularly useful.
+
+General Takeaways:
+-Very, very clearly define when a project is done. It's pretty cognitively taxing to always be wondering if I should wrap things up or keep plugging away.
+-while incendio helps reduce torch boilerplate, writing train.py is always still a pain and somehow involves way more work than I expect. I need to build some sort of CLI manager class to make this easier.
+-for some reason I find training models mentally exhausting. The best nights were always ones where I found a reason to justify working on some incendio functionality or building some new loss function rather than actually training a model. On a related note, I hate "stirring the pile" in hopes of better performance metrics, and I should keep this in mind both for my next project and for my career. Perhaps Stormlight struck a nice balance after all: I did still train a few models but it was a tiny portion of the work and I wasn't overly concerned with metrics, and the models were treated more like a tool for doing other cool things rather than being the end result.
+    -going forward: look into areas of ML work or research where improving performance metrics are not the goal. Examples: library development, tool building (e.g. comet, jupyter), interpretability (CNN circuits, Bert deep dream), data augmentation methods (this could be in the form of a library as well), privacy preserving ML (see openminded ML bookmark), art generation with a heavy reliance on preexisting methods and pretrained models (i.e. use GANS as a tool but don't worry about making them better, just use an out of the box implementation and find interesting ways to use it), app/product using ML as a tool (e.g. write with transformer). Perhaps things like model distillation, generative learning, or super low resource learning would be palatable despite being model-focused. 
+-when you're stuck on a problem and not enjoying it, remember to fit in a little time to work on other projects from time to time. Mixing in work sessions on htools or my spatial attention experiment provided a much needed change of pace.
+-Don't waiver on hard requirements (i.e. I grinded out my custom fastai components to avoid missing that requirement) but also know when to quit. As tempting as it is to devote more time to my Siamese net-related ideas, it's clearly time to move on.
+-Maybe when starting to explore a new area of ML, try to make sure the task is incredibly simple (i.e. intro to ML uses Iris dataset, not some crazy messy dataset with all kinds of quirks and challenges). Even the best solutions to imagewang don't achieve great performance metrics, so you can imagine a mediocre beginner's solution will look like absolute trash.

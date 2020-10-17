@@ -479,8 +479,9 @@ Plans: We're at a bit of a crossroads: I'm very tempted to wrap this up, write a
 
 10/16/20
 --------
-Progress:
+Progress: Post-mortem. Went through and looked for items worth porting to incendio (see misc.txt.).
 
-Plans:
+Plans: Done! But there are still things to do, just not directly part of this project: options include porting items to incendio, setting a timeline for when my next project should start, and researching options for my next project.
+
 
 

@@ -151,13 +151,13 @@ class PredictionExaminer:
         plt.tight_layout()
         if return_df: return df.dropna('title', axis=1)
 
-    def most_wrong(self, split='val', n=16, pred_classes=None, true_classes=None,
-                   return_df=False):
+    def most_wrong(self, split='val', n=16, pred_classes=None,
+                   true_classes=None, return_df=False):
         return self._select_base('most_wrong', split, n, pred_classes,
                                  true_classes, return_df)
 
-    def least_wrong(self, split='val', n=16, pred_classes=None, true_classes=None,
-                    return_df=False):
+    def least_wrong(self, split='val', n=16, pred_classes=None,
+                    true_classes=None, return_df=False):
         return self._select_base('least_wrong', split, n, pred_classes,
                                  true_classes, return_df)
 
