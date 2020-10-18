@@ -671,7 +671,7 @@ class RandomTransform:
         return x
 
     def __repr__(self):
-        return f'RandomTransform({func_name(func)}, p={self.p})'
+        return f'RandomTransform({func_name(self.func)}, p={self.p})'
 
 
 def patchwork_collate_fn(rows):

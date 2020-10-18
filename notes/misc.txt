@@ -271,16 +271,16 @@ Kornia - python package that looks like it lets us do image transforms on tensor
 10/16/20
 --------
 items to port to incendio:
-    -data.RandomTransform
-            -data.ImageMixer
-    -callbacks.CometCallbackWithGrads
+    X -data.RandomTransform
+            0 -data.ImageMixer [UPDATE: after examination, decided this is too specific to justify porting]
+    X -callbacks.CometCallbackWithGrads
     -losses.PairwiseLossReduction
             -losses.contrastive_loss, losses.ContrastiveLoss1d, losses.ContrastiveLoss2d
     -torch_utils.PredictionExaminer
             -torch_utils.n_out_channels
     -models.load_encoder (thought should probably rewrite this as a method of Trainer, basemodel, or similar)
         -models.MultiInputEncoder (should flesh out docs a little, maybe add shape info)
-        -models.SmoothSoftmaxBase, models.SmoothSoftmax, models.SmoothLogSoftmax
+        X -models.SmoothSoftmaxBase, models.SmoothSoftmax, models.SmoothLogSoftmax [UPDATE: also added SpatialSoftmax from image attention fiddling.]
 
 Post-Mortem
 -----------

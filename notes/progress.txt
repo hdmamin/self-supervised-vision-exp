@@ -483,5 +483,14 @@ Progress: Post-mortem. Went through and looked for items worth porting to incend
 
 Plans: Done! But there are still things to do, just not directly part of this project: options include porting items to incendio, setting a timeline for when my next project should start, and researching options for my next project.
 
+10/17/20
+--------
+Progress: Decided I might as well track my incendio porting progress here as well. Ported CometGradientCallback (new name, decided to leave this as a subclass of CometCallback after considering a few different approaches), RandomTransform, all 3 smoothsoftmax classes and a 4th from spatial attention experiments, and decided not to port ImageMixer (more specific to this task than I remembered). Started considering how to port load_encoder but decided this will require a little more thought.
 
+Plans: Continue porting things to incendio: load_encoder, predictionexaminer, multiinputencoder, pairwiselossreduction, and all contrastiveloss examples remain. Could also do one of the reworkings outlined below.
+
+Porting to incendio: outstanding tasks
+-rework the softmax version of contrastive loss to include nllloss so it can serve as a standalone loss function
+-write my own plot_images function to allow customization of plot title text color
+    -integrate into predictionexaminer before porting to incendio
 
