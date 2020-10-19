@@ -52,12 +52,6 @@ class PredictionExaminer:
         self.dls = {}
         self.dfs = {}
 
-        # self.dl = getattr(trainer, f'dl_{dl}') if isinstance(dl, str) else dl
-        # if 'random' in type(self.dl.batch_sampler.sampler).__name__.lower():
-        #     self.dl = DataLoader(self.dl.dataset, self.dl.batch_size,
-        #                          shuffle=False,
-        #                          num_workers=self.dl.num_workers)
-
     def evaluate(self, split='val', return_df=True):
         dl = getattr(self.trainer, f'dl_{split}')
         if 'random' in type(dl.batch_sampler.sampler).__name__.lower():
@@ -302,7 +296,9 @@ def gpu_setup(make_reproducible=True, seed=1, verbose=True):
     """
     if make_reproducible: reproducible(seed, verbose)
     if not torch.cuda.is_available(): warnings.warn('Cuda not available.')
-    if DEVICE.type != 'cuda': warnings.warn('Incendio device is not cuda.')
+    if DEVICE.type != 'cuda':
+        print(DEVICE)
+        warnings.warn('Incendio device is not cuda.')
 
 
 def flip_tensor(x, dim=-1):

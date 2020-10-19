@@ -494,3 +494,12 @@ Porting to incendio: outstanding tasks
 -write my own plot_images function to allow customization of plot title text color
     -integrate into predictionexaminer before porting to incendio
 
+10/18/20
+--------
+Progress: Ported SiameseBase (adjusted name and added example). Wrote plot_images function (ported to incendio) and an ifnone() helper function (ported to htools). Updated PredictionExaminer with my plot_images class and updated plotting method to adjust each image's title color based on whether its prediction was correct (still need to test this).
+
+Plans: Test that new title color functionality works in PredictionExaminer. Port n_out_channels, load_encoder, and/or some contrastive loss variants.
+
+Porting to incendio: outstanding tasks
+-rework the softmax version of contrastive loss to include nllloss so it can serve as a standalone loss function
+

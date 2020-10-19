@@ -168,7 +168,7 @@ class MultiInputEncoder(nn.Module):
     def forward(self, *xb):
         bs = xb[0].shape[0]
         xb = self._forward(torch.cat(xb, dim=0))
-        return xb.view(bs, -1, xb.shape[1:])
+        return xb.view(bs, -1, *xb.shape[1:])
 
     @abstractmethod
     def _forward(self, xb):
