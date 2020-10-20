@@ -502,9 +502,9 @@ Plans: Test that new title color functionality works in PredictionExaminer. Port
 
 10/19/20
 --------
-Progress: 
+Progress: Wrote new, much more robust version of out_channels func and ported to incendio. Tested incendio version of predictionexaminer class with colored titles and found and fixed bug.
 
-Plans: 
+Plans: Port load encoder and/or some contrastive loss variants if time allows. Write some documentation for plot_images.
 
 ---
 Porting to incendio: outstanding tasks
