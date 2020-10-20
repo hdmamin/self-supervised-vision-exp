@@ -500,6 +500,13 @@ Progress: Ported SiameseBase (adjusted name and added example). Wrote plot_image
 
 Plans: Test that new title color functionality works in PredictionExaminer. Port n_out_channels, load_encoder, and/or some contrastive loss variants.
 
+10/19/20
+--------
+Progress: 
+
+Plans: 
+
+---
 Porting to incendio: outstanding tasks
 -rework the softmax version of contrastive loss to include nllloss so it can serve as a standalone loss function
 
