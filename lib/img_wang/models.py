@@ -132,7 +132,7 @@ class Encoder(BaseModel):
                 *[ResBlock(c_in=fs[-1], activation=act, **res_kwargs)
                   for _ in range(res_blocks)]
             )
-        self.f_out = self.fs[-1]
+        self.f_out = fs[-1]
 
     def forward(self, x):
         x = self.conv(x)                           # (bs, f[-1], new_h, new_w)
