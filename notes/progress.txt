@@ -508,11 +508,17 @@ Plans: Port load encoder and/or some contrastive loss variants if time allows. W
 
 10/20/20
 --------
-Progress: Adapted load_encoder function into new method for basemodel and trainer. Also added basemodel.load method. Found and fixed a few missing "# export" bugs in incendio. Ported pairwiselossreduction.
+Progress: Adapted load_encoder function into new method for basemodel and trainer. Also added basemodel.load method. Found and fixed a few missing "# export" bugs in incendio. Ported pairwiselossreduction. Read a little about openmined research project.
 
 Plans: Rework the softmax version of contrastive loss to include nllloss so it can serve as a standalone loss function. Port all contrastive loss variants.
 
 10/21/20
+--------
+Progress: Ported contrastive loss and 1d and 2d variants. Wrote some documentation. Wrote new reduce function for the common task of taking mean/sum/no reduction of values in a custom loss function. Read a little more about openmined and made notes on potential teams.
+
+Plans: Port some examples for contrastive loss from img_wang to incendio. Work on the other contrastive loss variant using softmax.
+
+10/22/20
 --------
 Progress: 
 

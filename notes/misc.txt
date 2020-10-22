@@ -275,7 +275,7 @@ items to port to incendio:
             0 -data.ImageMixer [UPDATE: after examination, decided this is too specific to justify porting]
     X -callbacks.CometCallbackWithGrads
     X -losses.PairwiseLossReduction
-            -losses.contrastive_loss, losses.ContrastiveLoss1d, losses.ContrastiveLoss2d
+            X -losses.contrastive_loss, losses.ContrastiveLoss1d, losses.ContrastiveLoss2d
     X -torch_utils.PredictionExaminer
             X -torch_utils.n_out_channels
     X -models.load_encoder (thought should probably rewrite this as a method of Trainer, basemodel, or similar)
@@ -363,3 +363,13 @@ General Takeaways:
 -when you're stuck on a problem and not enjoying it, remember to fit in a little time to work on other projects from time to time. Mixing in work sessions on htools or my spatial attention experiment provided a much needed change of pace.
 -Don't waiver on hard requirements (i.e. I grinded out my custom fastai components to avoid missing that requirement) but also know when to quit. As tempting as it is to devote more time to my Siamese net-related ideas, it's clearly time to move on.
 -Maybe when starting to explore a new area of ML, try to make sure the task is incredibly simple (i.e. intro to ML uses Iris dataset, not some crazy messy dataset with all kinds of quirks and challenges). Even the best solutions to imagewang don't achieve great performance metrics, so you can imagine a mediocre beginner's solution will look like absolute trash.
+
+10/21/20
+--------
+Openmined possible teams (roughly ranked by promising-ness):
+-NLP (pros: "coding skills", "collaborating with researchers")
+-Identity (pros: "coding skills in python (or rust)", "collaborating with researchers", opennigs for both developers and "researcher developers")
+-Federated Learning (pros: 'building APIs or libraries (python recommender system library)'; cons: sounds like most libraries are mostly in JS/kotlin/swift, also want more of an engineering-heavy background (server management, networking, etc.), app asks for link to biggst PR)
+-Differential Privacy (unsure: "python coders and mathematicians to help validate algorithmic guarantees". Could be very interesting or pretty boring.)
+-Cryptography (cons: slightly higher barrier to entry (already merged 1 PR, also knowledge about encryption))
+
