@@ -520,7 +520,15 @@ Plans: Port some examples for contrastive loss from img_wang to incendio. Work o
 
 10/22/20
 --------
-Progress: 
+Progress: Worked a bit on contrastive loss variant: did some refactoring to remove classificationhead superclass and also realized that I maybe never finished the img_wang implementation. Reviewed paper and blog post to try to remind myself what it's trying to do. Made a little progress but I may be more confused now about what the goal is.
 
-Plans: 
+Plans: Fiddle a bit more with contrastive loss to see if I can get it working, otherwise consider whether this is really necessary - already have other contrastive loss functions working and I have no immediate plans to use any of them.
+
+10/23/20
+--------
+Progress:
+
+Plans:
+
+
 
