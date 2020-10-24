@@ -407,6 +407,9 @@ class SimilarityHead(ClassificationHead):
     operation. This can then be fed directly into nn.NLLLoss. This avoids
     any trouble with passing x to the loss function which is currently
     difficult in Incendio.
+
+    Note: later realized this contrastive loss setup may not actually work.
+    ¯\_(ツ)_/¯
     """
 
     def __init__(self, similarity=None, last_act='log_softmax',

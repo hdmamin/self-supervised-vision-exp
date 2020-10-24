@@ -320,19 +320,29 @@ def flip_tensor(x, dim=-1):
 
 
 def random_noise(x, mean=0, std=1, min_val=0, max_val=1):
-    """TODO: docs
+    """Augmentation function for troubleshooting purposes. Adds noise from a
+    random normal distibution with optional truncating (to avoid truncating,
+    you can always pass in an enormous max_val and an enormously negative
+    min_val).
 
     Parameters
     ----------
-    x
-    mean
-    std
-    min_val
-    max_val
+    x: torch.Tensor
+        The tensor to adjust.
+    mean: int or float
+        Mean of random noise distribution.
+    std: int or float
+        Standard deviation of random noise distribution.
+    min_val: int or float
+        Outputs will be clamped here. This refers to the output tensor, NOT
+        the random noise.
+    max_val: int or float
+        Outputs will be clamped here. This refers to the output tensor, NOT
+        the random noise.
 
     Returns
     -------
-
+    torch.Tensor: same shape as input x.
     """
     return torch.clamp(x + torch.randn_like(x).mul(std).add(mean),
                        min_val, max_val)
