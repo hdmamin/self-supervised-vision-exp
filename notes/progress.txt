@@ -526,7 +526,7 @@ Plans: Fiddle a bit more with contrastive loss to see if I can get it working, o
 
 10/23/20
 --------
-Progress: Spent a bit more time trying to understand other contrastive loss variant but ultimately decided to scrap it for now (on closer examination, I'm not even sure it's relevant to the img_wang task I was using). Ported some examples for my other contrastive loss functions. Added 1 docstring to img_wang that never got done (random_noise).
+Progress: Spent a bit more time trying to understand other contrastive loss variant but ultimately decided to scrap it for now (on closer examination, I'm not even sure it's relevant to the img_wang task I was using). Ported some examples for my other contrastive loss functions. Added 1 docstring to img_wang that never got done (random_noise). Read a bit more about openmined and spent a lot of time brainstorming project ideas.
 
 Plans: Officially done with img_wang. Start research process for selecting next project. Will stop taking notes in this project.
 
