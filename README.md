@@ -8,7 +8,7 @@ Experiments with self-supervised learning for computer vision.
 
 ### Repo Structure
 
-Code was prototyped in the `notebooks` directory and eventually ported to the `lib` directory (i.e. the latter is where you will find relatively clean, documented code). `bin/s01-train-unsup-single-input.py` is the command line script used to train new models.
+The `notebooks` directory contains messy prototyping code, which was eventually ported to the `lib` directory (i.e. the latter is where you will find relatively clean, well-documented code). `bin/s01-train-unsup-single-input.py` is the command line script used to train new models.
 
 ```
 self-supervised-vision-exp/
