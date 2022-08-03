@@ -1,4 +1,4 @@
-# img_wang
+# Self Supervised Vision Experiments
 
 # Project Description
 Experiments with self-supervised learning for computer vision.
@@ -11,7 +11,7 @@ Experiments with self-supervised learning for computer vision.
 Code was prototyped in the `notebooks` directory and eventually ported to the `lib` directory (i.e. the latter is where you will find relatively clean, documented code). `bin/s01-train-unsup-single-input.py` is the command line script used to train new models.
 
 ```
-img_wang/
+self-supervised-vision-exp/
 ├── data         # Raw and processed data. Actual files are excluded from github.
 ├── notes        # Miscellaneous notes stored as raw text files.
 ├── notebooks    # Jupyter notebooks for experimentation and exploratory analysis.
